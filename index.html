@@ -9,6 +9,24 @@
   >
 
   <title>Hornet Control</title>
+  
+  <link rel="manifest" href="manifest.webmanifest">
+
+<meta name="theme-color" content="#111827">
+
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+<meta
+  name="apple-mobile-web-app-status-bar-style"
+  content="black-translucent"
+>
+
+<meta
+  name="apple-mobile-web-app-title"
+  content="Hornet Control"
+>
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
@@ -440,5 +458,19 @@
         .classList.add("hidden");
     }
   </script>
+  <script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker
+        .register("./sw.js")
+        .then(function () {
+          console.log("Service Worker зареєстровано");
+        })
+        .catch(function (error) {
+          console.error("Service Worker error:", error);
+        });
+    });
+  }
+</script>
 </body>
 </html>
