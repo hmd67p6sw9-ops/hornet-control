@@ -61,8 +61,8 @@
 
     h2 {
       margin: 0;
-      font-size: 30px;
       text-align: center;
+      font-size: 30px;
     }
 
     #reader {
@@ -109,6 +109,24 @@
       font-weight: 500;
     }
 
+    .starlink-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .starlink-row .value {
+      flex: 1;
+    }
+
+    .small-button {
+      width: auto;
+      min-width: 110px;
+      margin: 0;
+      padding: 10px 12px;
+      font-size: 15px;
+    }
+
     .status-badge {
       display: inline-block;
       padding: 8px 14px;
@@ -117,29 +135,12 @@
       font-weight: 700;
     }
 
-    .badge-storage {
-      background: #bfdbfe;
-    }
-
-    .badge-workshop {
-      background: #fde68a;
-    }
-
-    .badge-ready {
-      background: #bbf7d0;
-    }
-
-    .badge-damaged {
-      background: #fed7aa;
-    }
-
-    .badge-written-off {
-      background: #fecaca;
-    }
-
-    .badge-unknown {
-      background: #e5e7eb;
-    }
+    .badge-storage { background: #bfdbfe; }
+    .badge-workshop { background: #fde68a; }
+    .badge-ready { background: #bbf7d0; }
+    .badge-damaged { background: #fed7aa; }
+    .badge-written-off { background: #fecaca; }
+    .badge-unknown { background: #e5e7eb; }
 
     .status-section {
       margin-top: 18px;
@@ -175,52 +176,112 @@
       color: #ffffff;
     }
 
-    .storage {
-      background: #93c5fd;
-    }
-
-    .workshop {
-      background: #fcd34d;
-    }
-
-    .ready {
-      background: #86efac;
-    }
-
-    .damaged {
-      background: #fdba74;
-    }
-
-    .written-off {
-      background: #fca5a5;
-    }
+    .storage { background: #93c5fd; }
+    .workshop { background: #fcd34d; }
+    .ready { background: #86efac; }
+    .damaged { background: #fdba74; }
+    .written-off { background: #fca5a5; }
 
     .secondary {
       background: #e5e7eb;
       color: #111827;
     }
 
-    #message {
+    .danger {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    #message,
+    #cardMessage,
+    #starlinkMessage {
       margin-top: 12px;
       padding: 12px;
       border-radius: 11px;
       font-size: 16px;
     }
 
-    .info {
-      background: #dbeafe;
-    }
-
-    .success {
-      background: #dcfce7;
-    }
-
-    .error {
-      background: #fee2e2;
-    }
+    .info { background: #dbeafe; }
+    .success { background: #dcfce7; }
+    .error { background: #fee2e2; }
 
     .hidden {
       display: none !important;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 14px;
+      background: rgba(0, 0, 0, 0.62);
+    }
+
+    .modal-content {
+      width: 100%;
+      max-width: 520px;
+      max-height: 88vh;
+      overflow-y: auto;
+      padding: 18px;
+      background: #ffffff;
+      border-radius: 20px 20px 14px 14px;
+    }
+
+    .modal-title {
+      margin: 0 0 14px;
+      text-align: center;
+      font-size: 24px;
+    }
+
+    .starlink-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      margin-top: 9px;
+      padding: 14px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      background: #ffffff;
+      text-align: left;
+      font-size: 17px;
+    }
+
+    .starlink-option.current {
+      border-color: #2563eb;
+      background: #dbeafe;
+    }
+
+    .starlink-option input {
+      width: 20px;
+      height: 20px;
+      flex: 0 0 auto;
+    }
+
+    .starlink-option-text {
+      flex: 1;
+    }
+
+    .starlink-id {
+      display: block;
+      font-weight: 700;
+    }
+
+    .starlink-meta {
+      display: block;
+      margin-top: 3px;
+      color: #6b7280;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .no-items {
+      padding: 18px 4px;
+      color: #6b7280;
+      text-align: center;
     }
   </style>
 </head>
@@ -251,7 +312,6 @@
     </div>
 
     <div id="aircraftCard" class="card hidden">
-
       <h2 id="aircraftId"></h2>
 
       <div class="field">
@@ -261,7 +321,17 @@
 
       <div class="field">
         <div class="label">STARLINK</div>
-        <div id="starlink" class="value"></div>
+
+        <div class="starlink-row">
+          <div id="starlink" class="value"></div>
+
+          <button
+            class="primary small-button"
+            onclick="openStarlinkModal()"
+          >
+            Змінити
+          </button>
+        </div>
       </div>
 
       <div class="field">
@@ -337,7 +407,43 @@
         Сканувати інший борт
       </button>
     </div>
+  </div>
 
+  <div id="starlinkModal" class="modal hidden">
+    <div class="modal-content">
+      <h3 class="modal-title">Прив’язка STARLINK</h3>
+
+      <div id="starlinkOptions">
+        <div class="no-items">
+          Завантаження…
+        </div>
+      </div>
+
+      <div id="starlinkMessage" class="hidden"></div>
+
+      <button
+        id="saveStarlinkButton"
+        class="primary"
+        onclick="saveStarlinkAssignment()"
+      >
+        Зберегти
+      </button>
+
+      <button
+        id="unlinkStarlinkButton"
+        class="danger"
+        onclick="unlinkStarlink()"
+      >
+        Відв’язати STARLINK
+      </button>
+
+      <button
+        class="secondary"
+        onclick="closeStarlinkModal()"
+      >
+        Скасувати
+      </button>
+    </div>
   </div>
 
   <script>
@@ -350,8 +456,11 @@
     let scanner = null;
     let scannerRunning = false;
     let scanLocked = false;
+
     let selectedAircraftId = "";
     let currentAircraftStatus = "";
+    let currentStarlinkId = "";
+    let selectedStarlinkId = "";
 
     window.addEventListener("load", function () {
       startScanner();
@@ -361,6 +470,10 @@
       scanLocked = false;
       selectedAircraftId = "";
       currentAircraftStatus = "";
+      currentStarlinkId = "";
+      selectedStarlinkId = "";
+
+      closeStarlinkModal();
 
       document
         .getElementById("aircraftCard")
@@ -410,9 +523,7 @@
       } catch (firstError) {
         try {
           await scanner.start(
-            {
-              facingMode: "environment"
-            },
+            { facingMode: "environment" },
             {
               fps: 12,
               qrbox: 250
@@ -506,6 +617,7 @@
     function showAircraft(aircraft) {
       selectedAircraftId = aircraft.id;
       currentAircraftStatus = aircraft.status;
+      currentStarlinkId = aircraft.starlink || "";
 
       document.getElementById("aircraftId").textContent =
         aircraft.id;
@@ -601,11 +713,7 @@
       if (!selectedAircraftId) return;
 
       disableStatusButtons(true);
-
-      showCardMessage(
-        "Збереження…",
-        "info"
-      );
+      showCardMessage("Збереження…", "info");
 
       apiRequest(
         {
@@ -644,6 +752,228 @@
           }, 1200);
         }
       );
+    }
+
+    function openStarlinkModal() {
+      if (!selectedAircraftId) return;
+
+      selectedStarlinkId = currentStarlinkId;
+
+      document
+        .getElementById("starlinkModal")
+        .classList.remove("hidden");
+
+      document.getElementById("starlinkOptions").innerHTML =
+        '<div class="no-items">Завантаження…</div>';
+
+      hideStarlinkMessage();
+
+      apiRequest(
+        {
+          action: "starlinks",
+          id: selectedAircraftId
+        },
+        function (response) {
+          if (!response.ok) {
+            showStarlinkMessage(
+              response.error || "Не вдалося завантажити список",
+              "error"
+            );
+
+            return;
+          }
+
+          renderStarlinks(response.starlinks || []);
+        }
+      );
+    }
+
+    function renderStarlinks(starlinks) {
+      const container =
+        document.getElementById("starlinkOptions");
+
+      container.innerHTML = "";
+
+      if (!starlinks.length) {
+        container.innerHTML =
+          '<div class="no-items">' +
+          'Немає доступних STARLINK' +
+          '</div>';
+
+        return;
+      }
+
+      starlinks.forEach(function (item) {
+        const label = document.createElement("label");
+
+        label.className =
+          "starlink-option" +
+          (item.current ? " current" : "");
+
+        const radio = document.createElement("input");
+
+        radio.type = "radio";
+        radio.name = "starlinkChoice";
+        radio.value = item.id;
+        radio.checked =
+          item.id === selectedStarlinkId;
+
+        radio.addEventListener("change", function () {
+          selectedStarlinkId = item.id;
+
+          document
+            .querySelectorAll(".starlink-option")
+            .forEach(function (option) {
+              option.classList.remove("current");
+            });
+
+          label.classList.add("current");
+        });
+
+        const text = document.createElement("span");
+        text.className = "starlink-option-text";
+
+        const id = document.createElement("span");
+        id.className = "starlink-id";
+        id.textContent = item.id;
+
+        const meta = document.createElement("span");
+        meta.className = "starlink-meta";
+        meta.textContent = item.current
+          ? "Зараз встановлений на цьому борту"
+          : item.status || "Вільний";
+
+        text.appendChild(id);
+        text.appendChild(meta);
+
+        label.appendChild(radio);
+        label.appendChild(text);
+
+        container.appendChild(label);
+      });
+    }
+
+    function saveStarlinkAssignment() {
+      if (!selectedAircraftId) return;
+
+      if (!selectedStarlinkId) {
+        showStarlinkMessage(
+          "Вибери STARLINK зі списку",
+          "error"
+        );
+
+        return;
+      }
+
+      setStarlinkModalButtonsDisabled(true);
+
+      showStarlinkMessage(
+        "Збереження прив’язки…",
+        "info"
+      );
+
+      assignStarlink(selectedStarlinkId);
+    }
+
+    function unlinkStarlink() {
+      if (!selectedAircraftId) return;
+
+      if (!currentStarlinkId) {
+        showStarlinkMessage(
+          "На цьому борту STARLINK не прив’язаний",
+          "info"
+        );
+
+        return;
+      }
+
+      setStarlinkModalButtonsDisabled(true);
+
+      showStarlinkMessage(
+        "Відв’язування…",
+        "info"
+      );
+
+      assignStarlink("");
+    }
+
+    function assignStarlink(starlinkId) {
+      apiRequest(
+        {
+          action: "assignStarlink",
+          id: selectedAircraftId,
+          starlink: starlinkId
+        },
+        function (response) {
+          setStarlinkModalButtonsDisabled(false);
+
+          if (!response.ok) {
+            showStarlinkMessage(
+              response.error || "Помилка прив’язки",
+              "error"
+            );
+
+            return;
+          }
+
+          currentStarlinkId =
+            response.result.starlink || "";
+
+          setFieldValue(
+            "starlink",
+            currentStarlinkId,
+            "Не прив’язаний"
+          );
+
+          showStarlinkMessage(
+            response.result.message,
+            "success"
+          );
+
+          if (navigator.vibrate) {
+            navigator.vibrate(150);
+          }
+
+          setTimeout(function () {
+            closeStarlinkModal();
+          }, 900);
+        }
+      );
+    }
+
+    function closeStarlinkModal() {
+      document
+        .getElementById("starlinkModal")
+        .classList.add("hidden");
+
+      selectedStarlinkId = "";
+      hideStarlinkMessage();
+      setStarlinkModalButtonsDisabled(false);
+    }
+
+    function setStarlinkModalButtonsDisabled(disabled) {
+      document
+        .querySelectorAll("#starlinkModal button")
+        .forEach(function (button) {
+          button.disabled = disabled;
+        });
+    }
+
+    function showStarlinkMessage(text, type) {
+      const element =
+        document.getElementById("starlinkMessage");
+
+      element.textContent = text;
+      element.className = type || "info";
+      element.classList.remove("hidden");
+    }
+
+    function hideStarlinkMessage() {
+      const element =
+        document.getElementById("starlinkMessage");
+
+      element.textContent = "";
+      element.className = "hidden";
     }
 
     function disableStatusButtons(disabled) {
