@@ -1,4 +1,4 @@
-const CACHE_NAME = "hornet-control-v4";
+const CACHE_NAME = "hornet-control-v5";
 
 const APP_FILES = [
   "./",
