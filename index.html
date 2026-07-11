@@ -9,24 +9,20 @@
   >
 
   <title>Hornet Control</title>
-  
+
   <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="icon-192.png">
 
-<meta name="theme-color" content="#111827">
-
-<link rel="apple-touch-icon" href="icon-192.png">
-
-<meta name="apple-mobile-web-app-capable" content="yes">
-
-<meta
-  name="apple-mobile-web-app-status-bar-style"
-  content="black-translucent"
->
-
-<meta
-  name="apple-mobile-web-app-title"
-  content="Hornet Control"
->
+  <meta name="theme-color" content="#111827">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta
+    name="apple-mobile-web-app-status-bar-style"
+    content="black-translucent"
+  >
+  <meta
+    name="apple-mobile-web-app-title"
+    content="Hornet Control"
+  >
 
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
@@ -38,26 +34,34 @@
     body {
       margin: 0;
       padding: 14px;
-      background: #f3f4f6;
+      background: #111827;
       color: #111827;
       font-family: Arial, sans-serif;
     }
 
     .container {
-      max-width: 500px;
+      width: 100%;
+      max-width: 520px;
       margin: 0 auto;
     }
 
     .card {
       margin-bottom: 14px;
       padding: 18px;
-      background: white;
-      border-radius: 16px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.09);
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.22);
     }
 
     h1 {
       margin: 0 0 16px;
+      text-align: center;
+      font-size: 28px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 30px;
       text-align: center;
     }
 
@@ -65,65 +69,142 @@
       width: 100%;
       min-height: 280px;
       overflow: hidden;
-      background: #111;
-      border-radius: 12px;
+      background: #000000;
+      border-radius: 14px;
     }
 
-    button {
-      width: 100%;
-      margin-top: 10px;
-      padding: 15px;
-      border: 0;
-      border-radius: 11px;
-      font-size: 18px;
-      font-weight: bold;
-    }
-
-    .primary {
-      background: #1a73e8;
-      color: white;
-    }
-
-    .storage {
-      background: #9fc5e8;
-    }
-
-    .workshop {
-      background: #ffd966;
-    }
-
-    .ready {
-      background: #b6d7a8;
-    }
-
-    .damaged {
-      background: #f6b26b;
-    }
-
-    .written-off {
-      background: #ea9999;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .label {
-      margin-top: 13px;
+    .scanner-help {
+      margin: 12px 0 0;
+      text-align: center;
       color: #6b7280;
       font-size: 14px;
     }
 
+    .field {
+      padding: 13px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .field:last-of-type {
+      border-bottom: 0;
+    }
+
+    .label {
+      margin-bottom: 5px;
+      color: #6b7280;
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
     .value {
-      margin-top: 3px;
-      font-size: 24px;
-      font-weight: bold;
+      min-height: 26px;
+      font-size: 21px;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    .empty-value {
+      color: #9ca3af;
+      font-weight: 500;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .badge-storage {
+      background: #bfdbfe;
+    }
+
+    .badge-workshop {
+      background: #fde68a;
+    }
+
+    .badge-ready {
+      background: #bbf7d0;
+    }
+
+    .badge-damaged {
+      background: #fed7aa;
+    }
+
+    .badge-written-off {
+      background: #fecaca;
+    }
+
+    .badge-unknown {
+      background: #e5e7eb;
+    }
+
+    .status-section {
+      margin-top: 18px;
+    }
+
+    .status-section-title {
+      margin-bottom: 8px;
+      color: #6b7280;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 9px;
+      padding: 15px;
+      border: 0;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    button:disabled {
+      opacity: 0.38;
+      cursor: default;
+    }
+
+    .primary {
+      background: #2563eb;
+      color: #ffffff;
+    }
+
+    .storage {
+      background: #93c5fd;
+    }
+
+    .workshop {
+      background: #fcd34d;
+    }
+
+    .ready {
+      background: #86efac;
+    }
+
+    .damaged {
+      background: #fdba74;
+    }
+
+    .written-off {
+      background: #fca5a5;
+    }
+
+    .secondary {
+      background: #e5e7eb;
+      color: #111827;
     }
 
     #message {
       margin-top: 12px;
       padding: 12px;
-      border-radius: 10px;
+      border-radius: 11px;
+      font-size: 16px;
     }
 
     .info {
@@ -137,23 +218,31 @@
     .error {
       background: #fee2e2;
     }
+
+    .hidden {
+      display: none !important;
+    }
   </style>
 </head>
 
 <body>
   <div class="container">
 
-    <div class="card">
+    <div id="scannerCard" class="card">
       <h1>Hornet Control</h1>
 
       <div id="reader"></div>
+
+      <p class="scanner-help">
+        Наведи камеру на QR-код борта
+      </p>
 
       <button
         id="cameraButton"
         class="primary hidden"
         onclick="startScanner()"
       >
-        📷 Запустити камеру
+        Запустити камеру
       </button>
 
       <div id="message" class="info">
@@ -162,33 +251,90 @@
     </div>
 
     <div id="aircraftCard" class="card hidden">
-      <div class="label">ID борта</div>
-      <div id="aircraftId" class="value"></div>
 
-      <div class="label">Поточний статус</div>
-      <div id="currentStatus" class="value"></div>
+      <h2 id="aircraftId"></h2>
 
-      <div class="label">Остання зміна</div>
-      <div id="lastChange" class="value"></div>
+      <div class="field">
+        <div class="label">Статус</div>
+        <div id="currentStatus"></div>
+      </div>
 
-      <button class="storage" onclick="changeStatus('На складі')">
-        На складі
-      </button>
+      <div class="field">
+        <div class="label">STARLINK</div>
+        <div id="starlink" class="value"></div>
+      </div>
 
-      <button class="workshop" onclick="changeStatus('Майстерня')">
-        Майстерня
-      </button>
+      <div class="field">
+        <div class="label">Серійний номер</div>
+        <div id="serialNumber" class="value"></div>
+      </div>
 
-      <button class="ready" onclick="changeStatus('БГ')">
-        БГ
-      </button>
+      <div class="field">
+        <div class="label">Дата отримання</div>
+        <div id="receivedDate" class="value"></div>
+      </div>
 
-      <button class="damaged" onclick="changeStatus('Пошкоджено')">
-        Пошкоджено
-      </button>
+      <div class="field">
+        <div class="label">Остання зміна</div>
+        <div id="lastChange" class="value"></div>
+      </div>
 
-      <button class="written-off" onclick="changeStatus('Списаний')">
-        Списаний
+      <div class="field">
+        <div class="label">Коментар</div>
+        <div id="comment" class="value"></div>
+      </div>
+
+      <div class="status-section">
+        <div class="status-section-title">
+          Змінити статус
+        </div>
+
+        <button
+          class="status-button storage"
+          data-status="На складі"
+          onclick="changeStatus('На складі')"
+        >
+          На складі
+        </button>
+
+        <button
+          class="status-button workshop"
+          data-status="Майстерня"
+          onclick="changeStatus('Майстерня')"
+        >
+          Майстерня
+        </button>
+
+        <button
+          class="status-button ready"
+          data-status="БГ"
+          onclick="changeStatus('БГ')"
+        >
+          БГ
+        </button>
+
+        <button
+          class="status-button damaged"
+          data-status="Пошкоджено"
+          onclick="changeStatus('Пошкоджено')"
+        >
+          Пошкоджено
+        </button>
+
+        <button
+          class="status-button written-off"
+          data-status="Списаний"
+          onclick="changeStatus('Списаний')"
+        >
+          Списаний
+        </button>
+      </div>
+
+      <button
+        class="secondary"
+        onclick="scanAnotherAircraft()"
+      >
+        Сканувати інший борт
       </button>
     </div>
 
@@ -205,6 +351,7 @@
     let scannerRunning = false;
     let scanLocked = false;
     let selectedAircraftId = "";
+    let currentAircraftStatus = "";
 
     window.addEventListener("load", function () {
       startScanner();
@@ -212,10 +359,16 @@
 
     async function startScanner() {
       scanLocked = false;
+      selectedAircraftId = "";
+      currentAircraftStatus = "";
 
       document
         .getElementById("aircraftCard")
         .classList.add("hidden");
+
+      document
+        .getElementById("scannerCard")
+        .classList.remove("hidden");
 
       document
         .getElementById("cameraButton")
@@ -236,7 +389,7 @@
           },
           {
             fps: 12,
-            qrbox: function(width, height) {
+            qrbox: function (width, height) {
               const size = Math.floor(
                 Math.min(width, height) * 0.75
               );
@@ -248,7 +401,7 @@
             }
           },
           onScanSuccess,
-          function() {}
+          function () {}
         );
 
         scannerRunning = true;
@@ -265,7 +418,7 @@
               qrbox: 250
             },
             onScanSuccess,
-            function() {}
+            function () {}
           );
 
           scannerRunning = true;
@@ -275,7 +428,7 @@
           scannerRunning = false;
 
           showMessage(
-            "Автоматичний запуск камери заблокований браузером. Натисни кнопку нижче.",
+            "Автоматичний запуск камери заблокований. Натисни кнопку нижче.",
             "error"
           );
 
@@ -324,47 +477,135 @@
     }
 
     function loadAircraft(id) {
-      showMessage("Завантаження " + id + "…", "info");
+      showMessage(
+        "Завантаження " + id + "…",
+        "info"
+      );
 
       apiRequest(
         {
           action: "get",
           id: id
         },
-        function(response) {
+        function (response) {
           if (!response.ok) {
-            showMessage(response.error, "error");
+            showMessage(
+              response.error || "Помилка завантаження",
+              "error"
+            );
+
             scanLocked = false;
             return;
           }
 
-          const aircraft = response.aircraft;
-
-          selectedAircraftId = aircraft.id;
-
-          document.getElementById("aircraftId").textContent =
-            aircraft.id;
-
-          document.getElementById("currentStatus").textContent =
-            aircraft.status;
-
-          document.getElementById("lastChange").textContent =
-            aircraft.lastChange;
-
-          document
-            .getElementById("aircraftCard")
-            .classList.remove("hidden");
-
-          hideMessage();
+          showAircraft(response.aircraft);
         }
       );
+    }
+
+    function showAircraft(aircraft) {
+      selectedAircraftId = aircraft.id;
+      currentAircraftStatus = aircraft.status;
+
+      document.getElementById("aircraftId").textContent =
+        aircraft.id;
+
+      setStatusBadge(aircraft.status);
+
+      setFieldValue(
+        "starlink",
+        aircraft.starlink,
+        "Не прив’язаний"
+      );
+
+      setFieldValue(
+        "serialNumber",
+        aircraft.serialNumber,
+        "Не вказано"
+      );
+
+      setFieldValue(
+        "receivedDate",
+        aircraft.receivedDate,
+        "Не вказано"
+      );
+
+      setFieldValue(
+        "lastChange",
+        aircraft.lastChange,
+        "Немає даних"
+      );
+
+      setFieldValue(
+        "comment",
+        aircraft.comment,
+        "Немає коментаря"
+      );
+
+      updateStatusButtons(aircraft.status);
+
+      document
+        .getElementById("scannerCard")
+        .classList.add("hidden");
+
+      document
+        .getElementById("aircraftCard")
+        .classList.remove("hidden");
+
+      hideMessage();
+    }
+
+    function setFieldValue(elementId, value, emptyText) {
+      const element =
+        document.getElementById(elementId);
+
+      if (value) {
+        element.textContent = value;
+        element.classList.remove("empty-value");
+      } else {
+        element.textContent = emptyText;
+        element.classList.add("empty-value");
+      }
+    }
+
+    function setStatusBadge(status) {
+      const element =
+        document.getElementById("currentStatus");
+
+      element.textContent = status || "Не вказано";
+      element.className = "status-badge";
+
+      const classes = {
+        "На складі": "badge-storage",
+        "Майстерня": "badge-workshop",
+        "БГ": "badge-ready",
+        "Пошкоджено": "badge-damaged",
+        "Списаний": "badge-written-off"
+      };
+
+      element.classList.add(
+        classes[status] || "badge-unknown"
+      );
+    }
+
+    function updateStatusButtons(status) {
+      document
+        .querySelectorAll(".status-button")
+        .forEach(function (button) {
+          button.disabled =
+            button.dataset.status === status;
+        });
     }
 
     function changeStatus(status) {
       if (!selectedAircraftId) return;
 
-      disableButtons(true);
-      showMessage("Збереження…", "info");
+      disableStatusButtons(true);
+
+      showCardMessage(
+        "Збереження…",
+        "info"
+      );
 
       apiRequest(
         {
@@ -372,29 +613,70 @@
           id: selectedAircraftId,
           status: status
         },
-        function(response) {
+        function (response) {
           if (!response.ok) {
-            disableButtons(false);
-            showMessage(response.error, "error");
+            disableStatusButtons(false);
+
+            showCardMessage(
+              response.error || "Помилка збереження",
+              "error"
+            );
+
             return;
           }
 
-          document.getElementById("currentStatus").textContent =
-            status;
+          currentAircraftStatus = status;
 
-          showMessage("Статус змінено", "success");
+          setStatusBadge(status);
+          updateStatusButtons(status);
+
+          showCardMessage(
+            response.result.message || "Статус змінено",
+            "success"
+          );
 
           if (navigator.vibrate) {
             navigator.vibrate(150);
           }
 
-          setTimeout(function() {
-            selectedAircraftId = "";
-            disableButtons(false);
-            startScanner();
+          setTimeout(function () {
+            scanAnotherAircraft();
           }, 1200);
         }
       );
+    }
+
+    function disableStatusButtons(disabled) {
+      document
+        .querySelectorAll(".status-button")
+        .forEach(function (button) {
+          button.disabled = disabled;
+        });
+    }
+
+    function scanAnotherAircraft() {
+      document
+        .getElementById("cardMessage")
+        ?.remove();
+
+      startScanner();
+    }
+
+    function showCardMessage(text, type) {
+      let element =
+        document.getElementById("cardMessage");
+
+      if (!element) {
+        element = document.createElement("div");
+        element.id = "cardMessage";
+
+        document
+          .getElementById("aircraftCard")
+          .appendChild(element);
+      }
+
+      element.textContent = text;
+      element.className = type || "info";
     }
 
     function apiRequest(parameters, callback) {
@@ -404,9 +686,10 @@
         "_" +
         Math.floor(Math.random() * 100000);
 
-      const script = document.createElement("script");
+      const script =
+        document.createElement("script");
 
-      window[callbackName] = function(response) {
+      window[callbackName] = function (response) {
         try {
           callback(response);
         } finally {
@@ -421,9 +704,10 @@
         callback: callbackName
       });
 
-      script.src = API_URL + "?" + query.toString();
+      script.src =
+        API_URL + "?" + query.toString();
 
-      script.onerror = function() {
+      script.onerror = function () {
         delete window[callbackName];
         script.remove();
 
@@ -436,16 +720,9 @@
       document.body.appendChild(script);
     }
 
-    function disableButtons(disabled) {
-      document
-        .querySelectorAll("#aircraftCard button")
-        .forEach(function(button) {
-          button.disabled = disabled;
-        });
-    }
-
     function showMessage(text, type) {
-      const element = document.getElementById("message");
+      const element =
+        document.getElementById("message");
 
       element.textContent = text;
       element.className = type || "info";
@@ -457,20 +734,19 @@
         .getElementById("message")
         .classList.add("hidden");
     }
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker
+          .register("./sw.js")
+          .catch(function (error) {
+            console.error(
+              "Service Worker error:",
+              error
+            );
+          });
+      });
+    }
   </script>
-  <script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function () {
-      navigator.serviceWorker
-        .register("./sw.js")
-        .then(function () {
-          console.log("Service Worker зареєстровано");
-        })
-        .catch(function (error) {
-          console.error("Service Worker error:", error);
-        });
-    });
-  }
-</script>
 </body>
 </html>
