@@ -27,6 +27,44 @@
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <style>
+
+    .form-label {
+  display: block;
+  margin-top: 15px;
+  margin-bottom: 6px;
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.form-input {
+  width: 100%;
+  padding: 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #111827;
+  font-family: inherit;
+  font-size: 17px;
+}
+
+.form-input:focus {
+  border-color: #2563eb;
+  outline: 2px solid #bfdbfe;
+}
+
+.form-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+#editMessage {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 11px;
+  font-size: 16px;
+}
     .history-item {
   padding: 14px 0;
   border-bottom: 1px solid #e5e7eb;
@@ -435,6 +473,13 @@
   class="secondary"
   onclick="openHistoryModal()"
 >
+      <button
+  class="primary"
+  onclick="openEditModal()"
+>
+        
+  Редагувати дані
+</button>
   Історія
 </button>
         Сканувати інший борт
@@ -480,6 +525,146 @@
   </div>
 
   <script>
+    function openEditModal() {
+  if (!currentAircraftData) return;
+
+  document.getElementById("editSerialNumber").value =
+    currentAircraftData.serialNumber || "";
+
+  document.getElementById("editReceivedDate").value =
+    displayDateToInputDate(
+      currentAircraftData.receivedDate
+    );
+
+  document.getElementById("editComment").value =
+    currentAircraftData.comment || "";
+
+  hideEditMessage();
+
+  document
+    .getElementById("editModal")
+    .classList.remove("hidden");
+}
+
+function closeEditModal() {
+  document
+    .getElementById("editModal")
+    .classList.add("hidden");
+
+  hideEditMessage();
+  setEditButtonsDisabled(false);
+}
+
+function saveAircraftDetails() {
+  if (!selectedAircraftId) return;
+
+  const serialNumber =
+    document.getElementById("editSerialNumber").value.trim();
+
+  const receivedDate =
+    document.getElementById("editReceivedDate").value;
+
+  const comment =
+    document.getElementById("editComment").value.trim();
+
+  setEditButtonsDisabled(true);
+
+  showEditMessage(
+    "Збереження даних…",
+    "info"
+  );
+
+  apiRequest(
+    {
+      action: "updateDetails",
+      id: selectedAircraftId,
+      serialNumber: serialNumber,
+      receivedDate: receivedDate,
+      comment: comment
+    },
+    function (response) {
+      setEditButtonsDisabled(false);
+
+      if (!response.ok) {
+        showEditMessage(
+          response.error || "Не вдалося зберегти дані",
+          "error"
+        );
+
+        return;
+      }
+
+      if (response.result.aircraft) {
+        showAircraft(response.result.aircraft);
+      }
+
+      showEditMessage(
+        response.result.message || "Дані оновлено",
+        "success"
+      );
+
+      if (navigator.vibrate) {
+        navigator.vibrate(150);
+      }
+
+      setTimeout(function () {
+        closeEditModal();
+      }, 800);
+    }
+  );
+}
+
+function displayDateToInputDate(value) {
+  const text = String(value || "").trim();
+
+  const match = text.match(
+    /^(\d{2})\.(\d{2})\.(\d{4})$/
+  );
+
+  if (!match) return "";
+
+  return (
+    match[3] +
+    "-" +
+    match[2] +
+    "-" +
+    match[1]
+  );
+}
+
+function setEditButtonsDisabled(disabled) {
+  document
+    .querySelectorAll("#editModal button")
+    .forEach(function (button) {
+      button.disabled = disabled;
+    });
+
+  document.getElementById("editSerialNumber").disabled =
+    disabled;
+
+  document.getElementById("editReceivedDate").disabled =
+    disabled;
+
+  document.getElementById("editComment").disabled =
+    disabled;
+}
+
+function showEditMessage(text, type) {
+  const element =
+    document.getElementById("editMessage");
+
+  element.textContent = text;
+  element.className = type || "info";
+  element.classList.remove("hidden");
+}
+
+function hideEditMessage() {
+  const element =
+    document.getElementById("editMessage");
+
+  element.textContent = "";
+  element.className = "hidden";
+}
     function openHistoryModal() {
   if (!selectedAircraftId) return;
 
@@ -536,9 +721,12 @@ function renderHistory(items) {
     const main = document.createElement("div");
     main.className = "history-main";
 
-    if (item.type === "starlink") {
-      main.textContent = item.comment;
-    } else {
+    if (
+  item.type === "starlink" ||
+  item.type === "details"
+) {
+  main.textContent = item.comment;
+} else {
       const oldStatus = item.oldStatus || "Не вказано";
       const newStatus = item.newStatus || "Не вказано";
 
@@ -613,7 +801,7 @@ function escapeHtml(value) {
     let currentAircraftStatus = "";
     let currentStarlinkId = "";
     let selectedStarlinkId = "";
-
+    let currentAircraftData = null;
     window.addEventListener("load", function () {
       startScanner();
     });
@@ -768,6 +956,7 @@ function escapeHtml(value) {
 
     function showAircraft(aircraft) {
       selectedAircraftId = aircraft.id;
+      currentAircraftData = aircraft;
       currentAircraftStatus = aircraft.status;
       currentStarlinkId = aircraft.starlink || "";
 
@@ -1247,6 +1436,60 @@ function escapeHtml(value) {
       onclick="closeHistoryModal()"
     >
       Закрити
+    </button>
+  </div>
+</div>
+  <div id="editModal" class="modal hidden">
+  <div class="modal-content">
+    <h3 class="modal-title">Редагування борта</h3>
+
+    <label class="form-label" for="editSerialNumber">
+      Серійний номер
+    </label>
+
+    <input
+      id="editSerialNumber"
+      class="form-input"
+      type="text"
+      autocomplete="off"
+      placeholder="Наприклад: HRN-240001"
+    >
+
+    <label class="form-label" for="editReceivedDate">
+      Дата отримання
+    </label>
+
+    <input
+      id="editReceivedDate"
+      class="form-input"
+      type="date"
+    >
+
+    <label class="form-label" for="editComment">
+      Коментар
+    </label>
+
+    <textarea
+      id="editComment"
+      class="form-input form-textarea"
+      placeholder="Короткий коментар щодо борта"
+    ></textarea>
+
+    <div id="editMessage" class="hidden"></div>
+
+    <button
+      id="saveDetailsButton"
+      class="primary"
+      onclick="saveAircraftDetails()"
+    >
+      Зберегти
+    </button>
+
+    <button
+      class="secondary"
+      onclick="closeEditModal()"
+    >
+      Скасувати
     </button>
   </div>
 </div>
