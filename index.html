@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1"
+  >
+
+  <title>Hornet Control</title>
+
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 14px;
+      background: #f3f4f6;
+      color: #111827;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .card {
+      margin-bottom: 14px;
+      padding: 18px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.09);
+    }
+
+    h1 {
+      margin: 0 0 16px;
+      text-align: center;
+    }
+
+    #reader {
+      width: 100%;
+      min-height: 280px;
+      overflow: hidden;
+      background: #111;
+      border-radius: 12px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 15px;
+      border: 0;
+      border-radius: 11px;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .primary {
+      background: #1a73e8;
+      color: white;
+    }
+
+    .storage {
+      background: #9fc5e8;
+    }
+
+    .workshop {
+      background: #ffd966;
+    }
+
+    .ready {
+      background: #b6d7a8;
+    }
+
+    .damaged {
+      background: #f6b26b;
+    }
+
+    .written-off {
+      background: #ea9999;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .label {
+      margin-top: 13px;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .value {
+      margin-top: 3px;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    #message {
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 10px;
+    }
+
+    .info {
+      background: #dbeafe;
+    }
+
+    .success {
+      background: #dcfce7;
+    }
+
+    .error {
+      background: #fee2e2;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <div class="card">
+      <h1>Hornet Control</h1>
+
+      <div id="reader"></div>
+
+      <button
+        id="cameraButton"
+        class="primary hidden"
+        onclick="startScanner()"
+      >
+        📷 Запустити камеру
+      </button>
+
+      <div id="message" class="info">
+        Запуск камери…
+      </div>
+    </div>
+
+    <div id="aircraftCard" class="card hidden">
+      <div class="label">ID борта</div>
+      <div id="aircraftId" class="value"></div>
+
+      <div class="label">Поточний статус</div>
+      <div id="currentStatus" class="value"></div>
+
+      <div class="label">Остання зміна</div>
+      <div id="lastChange" class="value"></div>
+
+      <button class="storage" onclick="changeStatus('На складі')">
+        На складі
+      </button>
+
+      <button class="workshop" onclick="changeStatus('Майстерня')">
+        Майстерня
+      </button>
+
+      <button class="ready" onclick="changeStatus('БГ')">
+        БГ
+      </button>
+
+      <button class="damaged" onclick="changeStatus('Пошкоджено')">
+        Пошкоджено
+      </button>
+
+      <button class="written-off" onclick="changeStatus('Списаний')">
+        Списаний
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+    const API_URL =
+      "https://script.google.com/macros/s/AKfycbxfORHXM7zD3BlIAe6UQY8fCq1Ep6CUGfNIbodo-iWvXbs9C7Pbpo-mZlLfv8af3YE/exec";
+
+    const API_KEY =
+      "HC_7YkP9vLm42QaX8Nr5DzB1UcEe96MwFs";
+
+    let scanner = null;
+    let scannerRunning = false;
+    let scanLocked = false;
+    let selectedAircraftId = "";
+
+    window.addEventListener("load", function () {
+      startScanner();
+    });
+
+    async function startScanner() {
+      scanLocked = false;
+
+      document
+        .getElementById("aircraftCard")
+        .classList.add("hidden");
+
+      document
+        .getElementById("cameraButton")
+        .classList.add("hidden");
+
+      showMessage("Запуск камери…", "info");
+
+      if (!scanner) {
+        scanner = new Html5Qrcode("reader");
+      }
+
+      try {
+        await scanner.start(
+          {
+            facingMode: {
+              exact: "environment"
+            }
+          },
+          {
+            fps: 12,
+            qrbox: function(width, height) {
+              const size = Math.floor(
+                Math.min(width, height) * 0.75
+              );
+
+              return {
+                width: size,
+                height: size
+              };
+            }
+          },
+          onScanSuccess,
+          function() {}
+        );
+
+        scannerRunning = true;
+        hideMessage();
+
+      } catch (firstError) {
+        try {
+          await scanner.start(
+            {
+              facingMode: "environment"
+            },
+            {
+              fps: 12,
+              qrbox: 250
+            },
+            onScanSuccess,
+            function() {}
+          );
+
+          scannerRunning = true;
+          hideMessage();
+
+        } catch (secondError) {
+          scannerRunning = false;
+
+          showMessage(
+            "Автоматичний запуск камери заблокований браузером. Натисни кнопку нижче.",
+            "error"
+          );
+
+          document
+            .getElementById("cameraButton")
+            .classList.remove("hidden");
+        }
+      }
+    }
+
+    async function stopScanner() {
+      if (!scanner || !scannerRunning) return;
+
+      try {
+        await scanner.stop();
+      } catch (error) {
+        console.log(error);
+      }
+
+      scannerRunning = false;
+    }
+
+    async function onScanSuccess(decodedText) {
+      if (scanLocked) return;
+
+      const id = normalizeId(decodedText);
+
+      if (!id) return;
+
+      scanLocked = true;
+
+      await stopScanner();
+
+      loadAircraft(id);
+    }
+
+    function normalizeId(value) {
+      const text = String(value || "")
+        .trim()
+        .toUpperCase()
+        .replace(/\s+/g, "");
+
+      const match = text.match(/HN-\d{4}/);
+
+      return match ? match[0] : "";
+    }
+
+    function loadAircraft(id) {
+      showMessage("Завантаження " + id + "…", "info");
+
+      apiRequest(
+        {
+          action: "get",
+          id: id
+        },
+        function(response) {
+          if (!response.ok) {
+            showMessage(response.error, "error");
+            scanLocked = false;
+            return;
+          }
+
+          const aircraft = response.aircraft;
+
+          selectedAircraftId = aircraft.id;
+
+          document.getElementById("aircraftId").textContent =
+            aircraft.id;
+
+          document.getElementById("currentStatus").textContent =
+            aircraft.status;
+
+          document.getElementById("lastChange").textContent =
+            aircraft.lastChange;
+
+          document
+            .getElementById("aircraftCard")
+            .classList.remove("hidden");
+
+          hideMessage();
+        }
+      );
+    }
+
+    function changeStatus(status) {
+      if (!selectedAircraftId) return;
+
+      disableButtons(true);
+      showMessage("Збереження…", "info");
+
+      apiRequest(
+        {
+          action: "update",
+          id: selectedAircraftId,
+          status: status
+        },
+        function(response) {
+          if (!response.ok) {
+            disableButtons(false);
+            showMessage(response.error, "error");
+            return;
+          }
+
+          document.getElementById("currentStatus").textContent =
+            status;
+
+          showMessage("Статус змінено", "success");
+
+          if (navigator.vibrate) {
+            navigator.vibrate(150);
+          }
+
+          setTimeout(function() {
+            selectedAircraftId = "";
+            disableButtons(false);
+            startScanner();
+          }, 1200);
+        }
+      );
+    }
+
+    function apiRequest(parameters, callback) {
+      const callbackName =
+        "hcCallback_" +
+        Date.now() +
+        "_" +
+        Math.floor(Math.random() * 100000);
+
+      const script = document.createElement("script");
+
+      window[callbackName] = function(response) {
+        try {
+          callback(response);
+        } finally {
+          delete window[callbackName];
+          script.remove();
+        }
+      };
+
+      const query = new URLSearchParams({
+        ...parameters,
+        key: API_KEY,
+        callback: callbackName
+      });
+
+      script.src = API_URL + "?" + query.toString();
+
+      script.onerror = function() {
+        delete window[callbackName];
+        script.remove();
+
+        showMessage(
+          "Не вдалося з’єднатися з Google Sheets.",
+          "error"
+        );
+      };
+
+      document.body.appendChild(script);
+    }
+
+    function disableButtons(disabled) {
+      document
+        .querySelectorAll("#aircraftCard button")
+        .forEach(function(button) {
+          button.disabled = disabled;
+        });
+    }
+
+    function showMessage(text, type) {
+      const element = document.getElementById("message");
+
+      element.textContent = text;
+      element.className = type || "info";
+      element.classList.remove("hidden");
+    }
+
+    function hideMessage() {
+      document
+        .getElementById("message")
+        .classList.add("hidden");
+    }
+  </script>
+</body>
+</html>
