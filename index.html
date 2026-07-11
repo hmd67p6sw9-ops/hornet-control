@@ -27,6 +27,33 @@
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <style>
+    .history-item {
+  padding: 14px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.history-time {
+  color: #6b7280;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.history-main {
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.history-arrow {
+  display: inline-block;
+  margin: 0 8px;
+  color: #6b7280;
+}
+
+.history-comment {
+  margin-top: 6px;
+  color: #374151;
+  font-size: 15px;
+}
     * {
       box-sizing: border-box;
     }
@@ -404,6 +431,12 @@
         class="secondary"
         onclick="scanAnotherAircraft()"
       >
+      <button
+  class="secondary"
+  onclick="openHistoryModal()"
+>
+  Історія
+</button>
         Сканувати інший борт
       </button>
     </div>
@@ -447,6 +480,125 @@
   </div>
 
   <script>
+    function openHistoryModal() {
+  if (!selectedAircraftId) return;
+
+  document
+    .getElementById("historyModal")
+    .classList.remove("hidden");
+
+  document.getElementById("historyList").innerHTML =
+    '<div class="no-items">Завантаження…</div>';
+
+  apiRequest(
+    {
+      action: "history",
+      id: selectedAircraftId
+    },
+    function (response) {
+      if (!response.ok) {
+        document.getElementById("historyList").innerHTML = "";
+
+        showHistoryMessage(
+          response.error || "Не вдалося завантажити історію",
+          "error"
+        );
+
+        return;
+      }
+
+      renderHistory(response.history || []);
+    }
+  );
+}
+
+function renderHistory(items) {
+  const container =
+    document.getElementById("historyList");
+
+  container.innerHTML = "";
+
+  if (!items.length) {
+    container.innerHTML =
+      '<div class="no-items">Історія відсутня</div>';
+
+    return;
+  }
+
+  items.forEach(function (item) {
+    const block = document.createElement("div");
+    block.className = "history-item";
+
+    const time = document.createElement("div");
+    time.className = "history-time";
+    time.textContent = item.timestamp;
+
+    const main = document.createElement("div");
+    main.className = "history-main";
+
+    if (item.type === "starlink") {
+      main.textContent = item.comment;
+    } else {
+      const oldStatus = item.oldStatus || "Не вказано";
+      const newStatus = item.newStatus || "Не вказано";
+
+      main.innerHTML =
+        escapeHtml(oldStatus) +
+        '<span class="history-arrow">→</span>' +
+        escapeHtml(newStatus);
+    }
+
+    block.appendChild(time);
+    block.appendChild(main);
+
+    if (
+      item.comment &&
+      item.type !== "starlink"
+    ) {
+      const comment = document.createElement("div");
+      comment.className = "history-comment";
+      comment.textContent = item.comment;
+      block.appendChild(comment);
+    }
+
+    container.appendChild(block);
+  });
+}
+
+function closeHistoryModal() {
+  document
+    .getElementById("historyModal")
+    .classList.add("hidden");
+
+  hideHistoryMessage();
+}
+
+function showHistoryMessage(text, type) {
+  const element =
+    document.getElementById("historyMessage");
+
+  element.textContent = text;
+  element.className = type || "info";
+  element.classList.remove("hidden");
+}
+
+function hideHistoryMessage() {
+  const element =
+    document.getElementById("historyMessage");
+
+  element.textContent = "";
+  element.className = "hidden";
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+    
     const API_URL =
       "https://script.google.com/macros/s/AKfycbwphLvMa8Ufe2HYMFz2Vg9LqJenq3alIktIiGESiYxN6mwtkCarxxoAiETCfPksnvD3/exec";
 
@@ -1078,5 +1230,25 @@
       });
     }
   </script>
+  <div id="historyModal" class="modal hidden">
+  <div class="modal-content">
+    <h3 class="modal-title">Історія борта</h3>
+
+    <div id="historyList">
+      <div class="no-items">
+        Завантаження…
+      </div>
+    </div>
+
+    <div id="historyMessage" class="hidden"></div>
+
+    <button
+      class="secondary"
+      onclick="closeHistoryModal()"
+    >
+      Закрити
+    </button>
+  </div>
+</div>
 </body>
 </html>
