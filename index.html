@@ -56,8 +56,8 @@
   <div id="editModal" class="modal hidden"><div class="modal-content"><h3 class="modal-title">Редагування борта</h3><label class="form-label" for="editSerialNumber">Серійний номер</label><input id="editSerialNumber" class="form-input" type="text" autocomplete="off" placeholder="Наприклад: HRN-240001"><label class="form-label" for="editReceivedDate">Дата отримання</label><input id="editReceivedDate" class="form-input" type="date"><label class="form-label" for="editComment">Коментар</label><textarea id="editComment" class="form-input form-textarea" placeholder="Короткий коментар щодо борта"></textarea><div id="editMessage" class="message hidden"></div><button id="saveDetailsButton" class="primary" onclick="saveAircraftDetails()">Зберегти</button><button class="secondary" onclick="closeEditModal()">Скасувати</button></div></div>
 
   <script>
-    const API_URL = "ВСТАВ_СЮДИ_СВІЙ_URL_APPS_SCRIPT_EXEC";
-    const API_KEY = "ВСТАВ_СЮДИ_СВІЙ_API_KEY";
+    const API_URL = " https://script.google.com/macros/s/AKfycbwphLvMa8Ufe2HYMFz2Vg9LqJenq3alIktIiGESiYxN6mwtkCarxxoAiETCfPksnvD3/exec";
+    const API_KEY = "HC_7YkP9vLm42QaX8Nr5DzB1UcEe96MwFs";
 
     let scanner=null,scannerRunning=false,scanLocked=false;
     let selectedAircraftId="",currentAircraftStatus="",currentStarlinkId="",selectedStarlinkId="",currentAircraftData=null;
