@@ -2063,75 +2063,46 @@
       }
 
       function apiRequest(parameters, callback) {
-        const callbackName =
-          "hcCallback_" +
-          Date.now() +
-          "_" +
-          Math.floor(Math.random() * 100000);
+  const callbackName =
+    "hcCallback_" +
+    Date.now() +
+    "_" +
+    Math.floor(Math.random() * 100000);
 
-        const script =
-          document.createElement("script");
+  const script =
+    document.createElement("script");
 
-        let finished = false;
+  window[callbackName] = function (response) {
+    try {
+      callback(response);
+    } finally {
+      delete window[callbackName];
+      script.remove();
+    }
+  };
 
-        const timeoutId = setTimeout(function () {
-          finishRequest({
-            ok: false,
-            error:
-              "Сервер не відповів протягом 20 секунд. " +
-              "Спробуй ще раз."
-          });
-        }, 20000);
+  const query = new URLSearchParams({
+    ...parameters,
+    key: API_KEY,
+    callback: callbackName
+  });
 
-        function cleanup() {
-          clearTimeout(timeoutId);
+  script.src =
+    API_URL + "?" + query.toString();
 
-          if (window[callbackName]) {
-            delete window[callbackName];
-          }
+  script.onerror = function () {
+    delete window[callbackName];
+    script.remove();
 
-          if (script.parentNode) {
-            script.remove();
-          }
-        }
+    callback({
+      ok: false,
+      error:
+        "Не вдалося з’єднатися з Google Sheets."
+    });
+  };
 
-        function finishRequest(response) {
-          if (finished) {
-            return;
-          }
-
-          finished = true;
-
-          try {
-            callback(response);
-          } finally {
-            cleanup();
-          }
-        }
-
-        window[callbackName] = function (response) {
-          finishRequest(response);
-        };
-
-        const query = new URLSearchParams({
-          ...parameters,
-          key: API_KEY,
-          callback: callbackName
-        });
-
-        script.src =
-          API_URL + "?" + query.toString();
-
-        script.onerror = function () {
-          finishRequest({
-            ok: false,
-            error:
-              "Не вдалося з’єднатися з Google Sheets."
-          });
-        };
-
-        document.body.appendChild(script);
-      }
+  document.body.appendChild(script);
+}
 
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", function () {
