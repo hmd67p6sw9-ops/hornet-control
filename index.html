@@ -1,0 +1,3055 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+
+    <title>Hornet Control</title>
+
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+
+    <meta name="theme-color" content="#111827" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Hornet Control" />
+
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"
+    ></script>
+
+    <style>
+      :root {
+        --bg: #111827;
+        --card: #ffffff;
+        --text: #111827;
+        --muted: #6b7280;
+        --line: #e5e7eb;
+        --primary: #2563eb;
+        --success: #dcfce7;
+        --info: #dbeafe;
+        --error: #fee2e2;
+        --warning: #fef3c7;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 14px;
+        background: var(--bg);
+        color: var(--text);
+        font-family: Arial, sans-serif;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 520px;
+        margin: 0 auto;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+
+      .topbar-title {
+        color: #fff;
+        font-size: 20px;
+        font-weight: 800;
+      }
+
+      .icon-button {
+        width: auto;
+        min-width: 48px;
+        margin: 0;
+        padding: 10px 13px;
+        background: #374151;
+        color: #fff;
+        font-size: 22px;
+      }
+
+      .card {
+        margin-bottom: 14px;
+        padding: 18px;
+        background: var(--card);
+        border-radius: 18px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.22);
+      }
+
+      h1 {
+        margin: 0 0 16px;
+        text-align: center;
+        font-size: 28px;
+      }
+
+      h2 {
+        margin: 0;
+        text-align: center;
+        font-size: 30px;
+      }
+
+      h3 {
+        margin: 0 0 14px;
+      }
+
+      #reader {
+        width: 100%;
+        min-height: 280px;
+        overflow: hidden;
+        background: #000;
+        border-radius: 14px;
+      }
+
+      .scanner-help {
+        margin: 12px 0 0;
+        text-align: center;
+        color: var(--muted);
+        font-size: 14px;
+      }
+
+      .field {
+        padding: 13px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .field:last-of-type {
+        border-bottom: 0;
+      }
+
+      .label,
+      .form-label {
+        display: block;
+        margin-bottom: 6px;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .form-label {
+        margin-top: 15px;
+      }
+
+      .value {
+        min-height: 26px;
+        font-size: 21px;
+        font-weight: 700;
+        overflow-wrap: anywhere;
+      }
+
+      .empty-value {
+        color: #9ca3af;
+        font-weight: 500;
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-size: 20px;
+        font-weight: 700;
+      }
+
+      .badge-storage {
+        background: #bfdbfe;
+      }
+      .badge-workshop {
+        background: #fde68a;
+      }
+      .badge-ready {
+        background: #bbf7d0;
+      }
+      .badge-damaged {
+        background: #fed7aa;
+      }
+      .badge-written-off {
+        background: #fecaca;
+      }
+      .badge-unknown {
+        background: #e5e7eb;
+      }
+
+      .starlink-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .starlink-row .value {
+        flex: 1;
+      }
+
+      .status-section {
+        margin-top: 18px;
+      }
+
+      .section-title {
+        margin-bottom: 8px;
+        color: var(--muted);
+        text-align: center;
+        font-size: 14px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      button {
+        width: 100%;
+        margin-top: 9px;
+        padding: 15px;
+        border: 0;
+        border-radius: 12px;
+        font-size: 18px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      button:disabled {
+        opacity: 0.38;
+        cursor: default;
+      }
+
+      .small-button {
+        width: auto;
+        min-width: 110px;
+        margin: 0;
+        padding: 10px 12px;
+        font-size: 15px;
+      }
+
+      .primary {
+        background: var(--primary);
+        color: #fff;
+      }
+      .secondary {
+        background: #e5e7eb;
+        color: #111827;
+      }
+      .danger {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+      .storage {
+        background: #93c5fd;
+      }
+      .workshop {
+        background: #fcd34d;
+      }
+      .ready {
+        background: #86efac;
+      }
+      .damaged {
+        background: #fdba74;
+      }
+      .written-off {
+        background: #fca5a5;
+      }
+
+      .message {
+        margin-top: 12px;
+        padding: 12px;
+        border-radius: 11px;
+        font-size: 16px;
+      }
+
+      .info {
+        background: var(--info);
+      }
+      .success {
+        background: var(--success);
+      }
+      .error {
+        background: var(--error);
+      }
+      .warning {
+        background: var(--warning);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding: 14px;
+        background: rgba(0, 0, 0, 0.62);
+      }
+
+      .modal-content {
+        width: 100%;
+        max-width: 520px;
+        max-height: 90vh;
+        overflow-y: auto;
+        padding: 18px;
+        background: #fff;
+        border-radius: 20px 20px 14px 14px;
+      }
+
+      .modal-title {
+        text-align: center;
+        font-size: 24px;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 13px;
+        border: 1px solid #d1d5db;
+        border-radius: 11px;
+        background: #fff;
+        color: #111827;
+        font-family: inherit;
+        font-size: 17px;
+      }
+
+      .form-input:focus {
+        border-color: var(--primary);
+        outline: 2px solid #bfdbfe;
+      }
+
+      .form-textarea {
+        min-height: 110px;
+        resize: vertical;
+      }
+
+      .menu-list button {
+        text-align: left;
+      }
+
+      .result-item {
+        width: 100%;
+        margin-top: 9px;
+        padding: 14px;
+        border: 2px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+        text-align: left;
+      }
+
+      .result-title {
+        display: block;
+        font-size: 18px;
+        font-weight: 800;
+      }
+
+      .result-meta {
+        display: block;
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .starlink-option {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        margin-top: 9px;
+        padding: 14px;
+        border: 2px solid var(--line);
+        border-radius: 12px;
+        background: #fff;
+        text-align: left;
+        font-size: 17px;
+      }
+
+      .starlink-option.current {
+        border-color: var(--primary);
+        background: var(--info);
+      }
+
+      .starlink-option input {
+        width: 20px;
+        height: 20px;
+        flex: 0 0 auto;
+      }
+
+      .starlink-option-text {
+        flex: 1;
+      }
+      .starlink-id {
+        display: block;
+        font-weight: 700;
+      }
+
+      .starlink-meta {
+        display: block;
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .history-item {
+        padding: 14px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .history-time {
+        margin-bottom: 6px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .history-main {
+        font-size: 17px;
+        font-weight: 700;
+      }
+
+      .history-arrow {
+        display: inline-block;
+        margin: 0 8px;
+        color: var(--muted);
+      }
+
+      .history-comment {
+        margin-top: 6px;
+        color: #374151;
+        font-size: 15px;
+      }
+
+      .qr-preview {
+        display: flex;
+        justify-content: center;
+        margin: 18px 0;
+        padding: 16px;
+        background: #ffffff;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+      }
+
+      .qr-preview img,
+      .qr-preview canvas {
+        width: min(72vw, 320px) !important;
+        height: min(72vw, 320px) !important;
+        image-rendering: pixelated;
+      }
+
+      .qr-payload {
+        margin-top: 8px;
+        color: var(--muted);
+        text-align: center;
+        font-family: monospace;
+        font-size: 14px;
+        overflow-wrap: anywhere;
+      }
+
+      .queue-summary {
+        margin-bottom: 12px;
+        padding: 12px;
+        background: var(--info);
+        border-radius: 11px;
+        text-align: center;
+        font-size: 17px;
+        font-weight: 700;
+      }
+
+      .queue-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-top: 9px;
+        padding: 13px;
+        border: 2px solid var(--line);
+        border-radius: 12px;
+        background: #ffffff;
+      }
+
+      .queue-item input {
+        width: 22px;
+        height: 22px;
+        flex: 0 0 auto;
+      }
+
+      .queue-item-text {
+        flex: 1;
+      }
+
+      .queue-item-id {
+        display: block;
+        font-size: 18px;
+        font-weight: 800;
+      }
+
+      .queue-item-date {
+        display: block;
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .no-items {
+        padding: 18px 4px;
+        color: var(--muted);
+        text-align: center;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="topbar">
+        <div class="topbar-title">Hornet Control v1.3.6</div>
+
+        <button class="icon-button" onclick="openAdminMenu()" aria-label="Меню">
+          ☰
+        </button>
+      </div>
+
+      <div id="scannerCard" class="card">
+        <h1>Сканер QR</h1>
+
+        <div id="reader"></div>
+
+        <p class="scanner-help">Наведи камеру на QR-код борта</p>
+
+        <button
+          id="cameraButton"
+          class="primary hidden"
+          onclick="startScanner()"
+        >
+          Запустити камеру
+        </button>
+
+        <div id="message" class="message info">Запуск камери…</div>
+      </div>
+
+      <div id="aircraftCard" class="card hidden">
+        <h2 id="aircraftId"></h2>
+
+        <div class="field">
+          <div class="label">Статус</div>
+          <div id="currentStatus"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">STARLINK</div>
+
+          <div class="starlink-row">
+            <div id="starlink" class="value"></div>
+
+            <button class="primary small-button" onclick="openStarlinkModal()">
+              Змінити
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label">Серійний номер</div>
+          <div id="serialNumber" class="value"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">Дата отримання</div>
+          <div id="receivedDate" class="value"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">Остання зміна</div>
+          <div id="lastChange" class="value"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">Коментар</div>
+          <div id="comment" class="value"></div>
+        </div>
+
+        <div class="status-section">
+          <div class="section-title">Змінити статус</div>
+
+          <button
+            class="status-button storage"
+            data-status="На складі"
+            onclick="changeStatus('На складі')"
+          >
+            На складі
+          </button>
+          <button
+            class="status-button workshop"
+            data-status="Майстерня"
+            onclick="changeStatus('Майстерня')"
+          >
+            Майстерня
+          </button>
+          <button
+            class="status-button ready"
+            data-status="БГ"
+            onclick="changeStatus('БГ')"
+          >
+            БГ
+          </button>
+          <button
+            class="status-button damaged"
+            data-status="Пошкоджено"
+            onclick="changeStatus('Пошкоджено')"
+          >
+            Пошкоджено
+          </button>
+          <button
+            class="status-button written-off"
+            data-status="Списаний"
+            onclick="changeStatus('Списаний')"
+          >
+            Списаний
+          </button>
+        </div>
+
+        <button class="primary" onclick="openEditModal()">
+          Редагувати дані
+        </button>
+
+        <button class="secondary" onclick="showAircraftQr()">
+          Показати QR
+        </button>
+
+        <button class="secondary" onclick="openHistoryModal()">
+          Історія
+        </button>
+        <button class="secondary" onclick="scanAnotherAircraft()">
+          Сканувати інший борт
+        </button>
+      </div>
+    </div>
+
+    <div id="adminMenuModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Адміністрування</h3>
+
+        <div class="menu-list">
+          <button class="primary" onclick="openAircraftSearchModal()">
+            Пошук борта
+          </button>
+          <button class="primary" onclick="openCreateAircraftModal()">
+            Додати новий борт
+          </button>
+          <button class="secondary" onclick="openStarlinkSearchModal()">
+            Пошук STARLINK
+          </button>
+          <button class="secondary" onclick="openCreateStarlinkModal()">
+            Додати STARLINK
+          </button>
+
+          <button class="secondary" onclick="openQrQueueModal()">
+            QR на друк
+            <span id="qrQueueMenuCount"></span>
+          </button>
+
+          <button class="secondary" onclick="closeAdminMenu()">
+            Закрити
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="aircraftSearchModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Пошук борта</h3>
+
+        <label class="form-label" for="aircraftSearchInput"
+          >ID або серійний номер</label
+        >
+        <input
+          id="aircraftSearchInput"
+          class="form-input"
+          type="text"
+          autocomplete="off"
+          placeholder="HN-0001 або серійний номер"
+        />
+
+        <button class="primary" onclick="searchAircraftFromApp()">
+          Знайти
+        </button>
+
+        <div id="aircraftSearchResults"></div>
+        <div id="aircraftSearchMessage" class="message hidden"></div>
+
+        <button class="secondary" onclick="closeAircraftSearchModal()">
+          Закрити
+        </button>
+      </div>
+    </div>
+
+    <div id="createAircraftModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Новий борт</h3>
+
+        <label class="form-label" for="newAircraftId">ID борта</label>
+        <input
+          id="newAircraftId"
+          class="form-input"
+          type="text"
+          autocomplete="off"
+          placeholder="HN-0019"
+        />
+
+        <label class="form-label" for="newAircraftStatus"
+          >Початковий статус</label
+        >
+        <select id="newAircraftStatus" class="form-input">
+          <option value="На складі">На складі</option>
+          <option value="Майстерня">Майстерня</option>
+          <option value="БГ">БГ</option>
+          <option value="Пошкоджено">Пошкоджено</option>
+          <option value="Списаний">Списаний</option>
+        </select>
+
+        <label class="form-label" for="newAircraftSerial">Серійний номер</label>
+        <input
+          id="newAircraftSerial"
+          class="form-input"
+          type="text"
+          autocomplete="off"
+        />
+
+        <label class="form-label" for="newAircraftDate">Дата отримання</label>
+        <input id="newAircraftDate" class="form-input" type="date" />
+
+        <label class="form-label" for="newAircraftComment">Коментар</label>
+        <textarea
+          id="newAircraftComment"
+          class="form-input form-textarea"
+        ></textarea>
+
+        <div id="createAircraftMessage" class="message hidden"></div>
+
+        <button
+          id="createAircraftButton"
+          class="primary"
+          onclick="createAircraftFromApp()"
+        >
+          Створити борт
+        </button>
+        <button class="secondary" onclick="closeCreateAircraftModal()">
+          Скасувати
+        </button>
+      </div>
+    </div>
+
+    <div id="starlinkSearchModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Пошук STARLINK</h3>
+
+        <label class="form-label" for="starlinkSearchInput"
+          >ID або серійний номер</label
+        >
+        <input
+          id="starlinkSearchInput"
+          class="form-input"
+          type="text"
+          autocomplete="off"
+          placeholder="MINI_001 або серійний номер"
+        />
+
+        <button class="primary" onclick="searchStarlinksFromApp()">
+          Знайти
+        </button>
+
+        <div id="starlinkSearchResults"></div>
+        <div id="starlinkSearchMessage" class="message hidden"></div>
+
+        <button class="secondary" onclick="closeStarlinkSearchModal()">
+          Закрити
+        </button>
+      </div>
+    </div>
+
+    <div id="createStarlinkModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Новий STARLINK</h3>
+
+        <label class="form-label" for="newStarlinkId">ID STARLINK</label>
+        <input
+          id="newStarlinkId"
+          class="form-input"
+          type="text"
+          readonly
+          aria-readonly="true"
+          placeholder="Завантаження номера…"
+        />
+
+        <label class="form-label" for="newStarlinkSerial">Серійний номер</label>
+        <input
+          id="newStarlinkSerial"
+          class="form-input"
+          type="text"
+          autocomplete="off"
+        />
+
+        <label class="form-label" for="newStarlinkComment">Коментар</label>
+        <textarea
+          id="newStarlinkComment"
+          class="form-input form-textarea"
+        ></textarea>
+
+        <div id="createStarlinkMessage" class="message hidden"></div>
+
+        <button
+          id="createStarlinkButton"
+          class="primary"
+          onclick="createStarlinkFromApp()"
+        >
+          Створити STARLINK
+        </button>
+        <button class="secondary" onclick="closeCreateStarlinkModal()">
+          Скасувати
+        </button>
+      </div>
+    </div>
+
+    <div id="starlinkInfoModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Картка STARLINK</h3>
+
+        <div class="field">
+          <div class="label">ID</div>
+          <div id="starlinkInfoId" class="value"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">Статус</div>
+          <div id="starlinkInfoStatus" class="value"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">Прив’язаний до</div>
+          <div id="starlinkInfoAircraft" class="value"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">Серійний номер</div>
+          <div id="starlinkInfoSerial" class="value"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">Коментар</div>
+          <div id="starlinkInfoComment" class="value"></div>
+        </div>
+
+        <button class="secondary" onclick="closeStarlinkInfoModal()">
+          Закрити
+        </button>
+      </div>
+    </div>
+
+    <div id="qrQueueModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">
+          QR на друк
+        </h3>
+
+        <div
+          id="qrQueueSummary"
+          class="queue-summary"
+        >
+          Завантаження…
+        </div>
+
+        <div
+          id="printSettingsSummary"
+          class="scanner-help"
+        ></div>
+
+        <button
+          class="secondary"
+          onclick="toggleAllQrQueue(true)"
+        >
+          Вибрати все
+        </button>
+
+        <button
+          class="secondary"
+          onclick="toggleAllQrQueue(false)"
+        >
+          Зняти вибір
+        </button>
+
+        <div id="qrQueueList"></div>
+
+        <div
+          id="qrQueueMessage"
+          class="message hidden"
+        ></div>
+
+        <button
+          id="createQrPdfButton"
+          class="primary"
+          onclick="createQrQueuePdf()"
+        >
+          Створити PDF
+        </button>
+
+        <button
+          id="markQrPrintedButton"
+          class="secondary"
+          onclick="markSelectedQrPrinted()"
+        >
+          Позначити надрукованими
+        </button>
+
+        <button
+          class="secondary"
+          onclick="closeQrQueueModal()"
+        >
+          Закрити
+        </button>
+      </div>
+    </div>
+
+    <div id="qrModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">QR-код борта</h3>
+
+        <div
+          id="qrAircraftId"
+          class="value"
+          style="text-align: center"
+        ></div>
+
+        <div id="qrPreview" class="qr-preview"></div>
+
+        <div id="qrPayload" class="qr-payload"></div>
+
+        <button class="primary" onclick="downloadAircraftQr()">
+          Завантажити PNG
+        </button>
+
+        <button class="secondary" onclick="printAircraftQr()">
+          Друкувати
+        </button>
+
+        <button class="secondary" onclick="closeQrModal()">
+          Закрити
+        </button>
+      </div>
+    </div>
+
+    <div id="starlinkModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Прив’язка STARLINK</h3>
+
+        <div id="starlinkOptions">
+          <div class="no-items">Завантаження…</div>
+        </div>
+
+        <div id="starlinkMessage" class="message hidden"></div>
+
+        <button
+          id="saveStarlinkButton"
+          class="primary"
+          onclick="saveStarlinkAssignment()"
+        >
+          Зберегти
+        </button>
+        <button
+          id="unlinkStarlinkButton"
+          class="danger"
+          onclick="unlinkStarlink()"
+        >
+          Відв’язати STARLINK
+        </button>
+        <button class="secondary" onclick="closeStarlinkModal()">
+          Скасувати
+        </button>
+      </div>
+    </div>
+
+    <div id="historyModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Історія борта</h3>
+
+        <div id="historyList">
+          <div class="no-items">Завантаження…</div>
+        </div>
+
+        <div id="historyMessage" class="message hidden"></div>
+
+        <button class="secondary" onclick="closeHistoryModal()">Закрити</button>
+      </div>
+    </div>
+
+    <div id="editModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Редагування борта</h3>
+
+        <label class="form-label" for="editSerialNumber">Серійний номер</label>
+        <input
+          id="editSerialNumber"
+          class="form-input"
+          type="text"
+          autocomplete="off"
+        />
+
+        <label class="form-label" for="editReceivedDate">Дата отримання</label>
+        <input id="editReceivedDate" class="form-input" type="date" />
+
+        <label class="form-label" for="editComment">Коментар</label>
+        <textarea id="editComment" class="form-input form-textarea"></textarea>
+
+        <div id="editMessage" class="message hidden"></div>
+
+        <button
+          id="saveDetailsButton"
+          class="primary"
+          onclick="saveAircraftDetails()"
+        >
+          Зберегти
+        </button>
+        <button class="secondary" onclick="closeEditModal()">Скасувати</button>
+      </div>
+    </div>
+
+    <script>
+      const API_URL = "ВСТАВ_СЮДИ_СВІЙ_URL_APPS_SCRIPT_EXEC";
+      const API_KEY = "ВСТАВ_СЮДИ_СВІЙ_API_KEY";
+
+      let scanner = null;
+      let scannerRunning = false;
+      let scanLocked = false;
+
+      let selectedAircraftId = "";
+      let currentAircraftStatus = "";
+      let currentStarlinkId = "";
+      let selectedStarlinkId = "";
+      let currentAircraftData = null;
+      let generatedQrAircraftId = "";
+      let generatedQrDataUrl = "";
+      let qrQueueItems = [];
+      let currentPrintSettings = null;
+
+      window.addEventListener("load", startScanner);
+
+      function openAdminMenu() {
+        document.getElementById("adminMenuModal").classList.remove("hidden");
+      }
+
+      function closeAdminMenu() {
+        document.getElementById("adminMenuModal").classList.add("hidden");
+      }
+
+      function openAircraftSearchModal() {
+        closeAdminMenu();
+        clearAircraftSearch();
+        document
+          .getElementById("aircraftSearchModal")
+          .classList.remove("hidden");
+      }
+
+      function closeAircraftSearchModal() {
+        document.getElementById("aircraftSearchModal").classList.add("hidden");
+      }
+
+      function openCreateAircraftModal() {
+        closeAdminMenu();
+
+        document.getElementById("newAircraftId").value =
+          "Завантаження…";
+
+        document.getElementById("newAircraftStatus").value =
+          "На складі";
+
+        document.getElementById("newAircraftSerial").value =
+          "";
+
+        document.getElementById("newAircraftDate").value =
+          "";
+
+        document.getElementById("newAircraftComment").value =
+          "";
+
+        hideGenericMessage(
+          "createAircraftMessage"
+        );
+
+        document
+          .getElementById("createAircraftModal")
+          .classList.remove("hidden");
+
+        setFormDisabled(
+          "createAircraftModal",
+          true
+        );
+
+        apiRequest(
+          {
+            action: "nextAircraftId"
+          },
+          function (response) {
+            setFormDisabled(
+              "createAircraftModal",
+              false
+            );
+
+            document.getElementById(
+              "newAircraftId"
+            ).readOnly = true;
+
+            if (!response.ok) {
+              document.getElementById(
+                "newAircraftId"
+              ).value = "";
+
+              showGenericMessage(
+                "createAircraftMessage",
+                response.error ||
+                  "Не вдалося отримати наступний ID",
+                "error"
+              );
+
+              document.getElementById(
+                "createAircraftButton"
+              ).disabled = true;
+
+              return;
+            }
+
+            document.getElementById(
+              "newAircraftId"
+            ).value = response.id;
+
+            document.getElementById(
+              "createAircraftButton"
+            ).disabled = false;
+          }
+        );
+      }
+
+      function closeCreateAircraftModal() {
+        document.getElementById("createAircraftModal").classList.add("hidden");
+        setFormDisabled("createAircraftModal", false);
+      }
+
+      function openStarlinkSearchModal() {
+        closeAdminMenu();
+        clearStarlinkSearch();
+        document
+          .getElementById("starlinkSearchModal")
+          .classList.remove("hidden");
+      }
+
+      function closeStarlinkSearchModal() {
+        document.getElementById("starlinkSearchModal").classList.add("hidden");
+      }
+
+      function openCreateStarlinkModal() {
+        closeAdminMenu();
+
+        document.getElementById(
+          "newStarlinkId"
+        ).value = "Завантаження…";
+
+        document.getElementById(
+          "newStarlinkSerial"
+        ).value = "";
+
+        document.getElementById(
+          "newStarlinkComment"
+        ).value = "";
+
+        hideGenericMessage(
+          "createStarlinkMessage"
+        );
+
+        document
+          .getElementById(
+            "createStarlinkModal"
+          )
+          .classList.remove("hidden");
+
+        setFormDisabled(
+          "createStarlinkModal",
+          true
+        );
+
+        apiRequest(
+          {
+            action: "nextStarlinkId"
+          },
+          function (response) {
+            setFormDisabled(
+              "createStarlinkModal",
+              false
+            );
+
+            document.getElementById(
+              "newStarlinkId"
+            ).readOnly = true;
+
+            if (!response.ok) {
+              document.getElementById(
+                "newStarlinkId"
+              ).value = "";
+
+              showGenericMessage(
+                "createStarlinkMessage",
+                response.error ||
+                  "Не вдалося отримати " +
+                  "наступний ID STARLINK",
+                "error"
+              );
+
+              document.getElementById(
+                "createStarlinkButton"
+              ).disabled = true;
+
+              return;
+            }
+
+            document.getElementById(
+              "newStarlinkId"
+            ).value = response.id;
+
+            document.getElementById(
+              "createStarlinkButton"
+            ).disabled = false;
+          }
+        );
+      }
+
+      function closeCreateStarlinkModal() {
+        document.getElementById("createStarlinkModal").classList.add("hidden");
+        setFormDisabled("createStarlinkModal", false);
+      }
+
+      function closeStarlinkInfoModal() {
+        document.getElementById("starlinkInfoModal").classList.add("hidden");
+      }
+
+      async function startScanner() {
+        scanLocked = false;
+        selectedAircraftId = "";
+        currentAircraftStatus = "";
+        currentStarlinkId = "";
+        selectedStarlinkId = "";
+        currentAircraftData = null;
+
+        closeAllContentModals();
+
+        document.getElementById("aircraftCard").classList.add("hidden");
+        document.getElementById("scannerCard").classList.remove("hidden");
+        document.getElementById("cameraButton").classList.add("hidden");
+
+        showMessage("Запуск камери…", "info");
+
+        if (!scanner) {
+          scanner = new Html5Qrcode("reader");
+        }
+
+        try {
+          await scanner.start(
+            { facingMode: { exact: "environment" } },
+            {
+              fps: 12,
+              qrbox: function (width, height) {
+                const size = Math.floor(Math.min(width, height) * 0.75);
+                return { width: size, height: size };
+              },
+            },
+            onScanSuccess,
+            function () {},
+          );
+
+          scannerRunning = true;
+          hideMessage();
+        } catch (firstError) {
+          try {
+            await scanner.start(
+              { facingMode: "environment" },
+              { fps: 12, qrbox: 250 },
+              onScanSuccess,
+              function () {},
+            );
+
+            scannerRunning = true;
+            hideMessage();
+          } catch (secondError) {
+            scannerRunning = false;
+            showMessage(
+              "Автоматичний запуск камери заблокований. Натисни кнопку нижче.",
+              "error",
+            );
+            document.getElementById("cameraButton").classList.remove("hidden");
+          }
+        }
+      }
+
+      function closeAllContentModals() {
+        [
+          "adminMenuModal",
+          "aircraftSearchModal",
+          "createAircraftModal",
+          "starlinkSearchModal",
+          "createStarlinkModal",
+          "starlinkInfoModal",
+          "qrQueueModal",
+          "qrModal",
+          "starlinkModal",
+          "historyModal",
+          "editModal",
+        ].forEach(function (id) {
+          document.getElementById(id).classList.add("hidden");
+        });
+      }
+
+      async function stopScanner() {
+        if (!scanner || !scannerRunning) return;
+
+        try {
+          await scanner.stop();
+        } catch (error) {
+          console.log(error);
+        }
+
+        scannerRunning = false;
+      }
+
+      async function onScanSuccess(decodedText) {
+        if (scanLocked) return;
+
+        const id = normalizeId(decodedText);
+        if (!id) return;
+
+        scanLocked = true;
+        await stopScanner();
+        loadAircraft(id);
+      }
+
+      function normalizeId(value) {
+        const text = String(value || "")
+          .trim()
+          .toUpperCase()
+          .replace(/\s+/g, "");
+        const match = text.match(/HN-\d{4}/);
+        return match ? match[0] : "";
+      }
+
+      function loadAircraft(id) {
+        showMessage("Завантаження " + id + "…", "info");
+
+        apiRequest({ action: "get", id: id }, function (response) {
+          if (!response.ok) {
+            showMessage(response.error || "Помилка завантаження", "error");
+            scanLocked = false;
+            return;
+          }
+
+          showAircraft(response.aircraft);
+        });
+      }
+
+      function showAircraft(aircraft) {
+        currentAircraftData = aircraft;
+        selectedAircraftId = aircraft.id;
+        currentAircraftStatus = aircraft.status;
+        currentStarlinkId = aircraft.starlink || "";
+
+        document.getElementById("aircraftId").textContent = aircraft.id;
+
+        setStatusBadge(aircraft.status);
+        setFieldValue("starlink", aircraft.starlink, "Не прив’язаний");
+        setFieldValue("serialNumber", aircraft.serialNumber, "Не вказано");
+        setFieldValue("receivedDate", aircraft.receivedDate, "Не вказано");
+        setFieldValue("lastChange", aircraft.lastChange, "Немає даних");
+        setFieldValue("comment", aircraft.comment, "Немає коментаря");
+
+        updateStatusButtons(aircraft.status);
+
+        document.getElementById("scannerCard").classList.add("hidden");
+        document.getElementById("aircraftCard").classList.remove("hidden");
+
+        hideMessage();
+      }
+
+      function setFieldValue(elementId, value, emptyText) {
+        const element = document.getElementById(elementId);
+
+        if (value) {
+          element.textContent = value;
+          element.classList.remove("empty-value");
+        } else {
+          element.textContent = emptyText;
+          element.classList.add("empty-value");
+        }
+      }
+
+      function setStatusBadge(status) {
+        const element = document.getElementById("currentStatus");
+
+        element.textContent = status || "Не вказано";
+        element.className = "status-badge";
+
+        const classes = {
+          "На складі": "badge-storage",
+          Майстерня: "badge-workshop",
+          БГ: "badge-ready",
+          Пошкоджено: "badge-damaged",
+          Списаний: "badge-written-off",
+        };
+
+        element.classList.add(classes[status] || "badge-unknown");
+      }
+
+      function updateStatusButtons(status) {
+        document.querySelectorAll(".status-button").forEach(function (button) {
+          button.disabled = button.dataset.status === status;
+        });
+      }
+
+      function changeStatus(status) {
+        if (!selectedAircraftId) return;
+
+        disableStatusButtons(true);
+        showCardMessage("Збереження…", "info");
+
+        apiRequest(
+          { action: "update", id: selectedAircraftId, status: status },
+          function (response) {
+            if (!response.ok) {
+              disableStatusButtons(false);
+              showCardMessage(response.error || "Помилка збереження", "error");
+              return;
+            }
+
+            currentAircraftStatus = status;
+            setStatusBadge(status);
+            updateStatusButtons(status);
+
+            showCardMessage(
+              response.result.message || "Статус змінено",
+              "success",
+            );
+
+            if (navigator.vibrate) navigator.vibrate(150);
+
+            setTimeout(scanAnotherAircraft, 1200);
+          },
+        );
+      }
+
+      function searchAircraftFromApp() {
+        const query = document
+          .getElementById("aircraftSearchInput")
+          .value.trim();
+        const container = document.getElementById("aircraftSearchResults");
+
+        if (!query) {
+          showGenericMessage(
+            "aircraftSearchMessage",
+            "Введи ID або серійний номер",
+            "error",
+          );
+          return;
+        }
+
+        container.innerHTML = '<div class="no-items">Пошук…</div>';
+        hideGenericMessage("aircraftSearchMessage");
+
+        apiRequest(
+          { action: "searchAircraft", query: query },
+          function (response) {
+            if (!response.ok) {
+              container.innerHTML = "";
+              showGenericMessage(
+                "aircraftSearchMessage",
+                response.error || "Помилка пошуку",
+                "error",
+              );
+              return;
+            }
+
+            renderAircraftSearchResults(response.aircraft || []);
+          },
+        );
+      }
+
+      function renderAircraftSearchResults(items) {
+        const container = document.getElementById("aircraftSearchResults");
+        container.innerHTML = "";
+
+        if (!items.length) {
+          container.innerHTML =
+            '<div class="no-items">Нічого не знайдено</div>';
+          return;
+        }
+
+        items.forEach(function (item) {
+          const button = document.createElement("button");
+          button.className = "result-item";
+
+          const title = document.createElement("span");
+          title.className = "result-title";
+          title.textContent = item.id;
+
+          const meta = document.createElement("span");
+          meta.className = "result-meta";
+          meta.textContent =
+            (item.status || "Не вказано") +
+            (item.serialNumber ? " • " + item.serialNumber : "");
+
+          button.appendChild(title);
+          button.appendChild(meta);
+
+          button.addEventListener("click", function () {
+            closeAircraftSearchModal();
+            showAircraft(item);
+          });
+
+          container.appendChild(button);
+        });
+      }
+
+      function clearAircraftSearch() {
+        document.getElementById("aircraftSearchInput").value = "";
+        document.getElementById("aircraftSearchResults").innerHTML = "";
+        hideGenericMessage("aircraftSearchMessage");
+      }
+
+      function createAircraftFromApp() {
+        const id = document.getElementById("newAircraftId").value.trim();
+        const status = document.getElementById("newAircraftStatus").value;
+        const serialNumber = document
+          .getElementById("newAircraftSerial")
+          .value.trim();
+        const receivedDate = document.getElementById("newAircraftDate").value;
+        const comment = document
+          .getElementById("newAircraftComment")
+          .value.trim();
+
+        setFormDisabled("createAircraftModal", true);
+        showGenericMessage("createAircraftMessage", "Створення борта…", "info");
+
+        apiRequest(
+          {
+            action: "createAircraft",
+            status: status,
+            serialNumber: serialNumber,
+            receivedDate: receivedDate,
+            comment: comment,
+          },
+          function (response) {
+            setFormDisabled("createAircraftModal", false);
+
+            if (!response.ok) {
+              showGenericMessage(
+                "createAircraftMessage",
+                response.error || "Не вдалося створити борт",
+                "error",
+              );
+              return;
+            }
+
+            showGenericMessage(
+              "createAircraftMessage",
+              response.result.message || "Борт створено",
+              "success",
+            );
+
+            if (navigator.vibrate) navigator.vibrate(150);
+
+            setTimeout(function () {
+              const aircraft =
+                response.result.aircraft;
+
+              closeCreateAircraftModal();
+              showAircraft(aircraft);
+              showAircraftQr(aircraft.id);
+              refreshQrQueueCount();
+            }, 800);
+          },
+        );
+      }
+
+      function searchStarlinksFromApp() {
+        const query = document
+          .getElementById("starlinkSearchInput")
+          .value.trim();
+        const container = document.getElementById("starlinkSearchResults");
+
+        if (!query) {
+          showGenericMessage(
+            "starlinkSearchMessage",
+            "Введи ID або серійний номер",
+            "error",
+          );
+          return;
+        }
+
+        container.innerHTML = '<div class="no-items">Пошук…</div>';
+        hideGenericMessage("starlinkSearchMessage");
+
+        apiRequest(
+          { action: "searchStarlinks", query: query },
+          function (response) {
+            if (!response.ok) {
+              container.innerHTML = "";
+              showGenericMessage(
+                "starlinkSearchMessage",
+                response.error || "Помилка пошуку",
+                "error",
+              );
+              return;
+            }
+
+            renderStarlinkSearchResults(response.starlinks || []);
+          },
+        );
+      }
+
+      function renderStarlinkSearchResults(items) {
+        const container = document.getElementById("starlinkSearchResults");
+        container.innerHTML = "";
+
+        if (!items.length) {
+          container.innerHTML =
+            '<div class="no-items">Нічого не знайдено</div>';
+          return;
+        }
+
+        items.forEach(function (item) {
+          const button = document.createElement("button");
+          button.className = "result-item";
+
+          const title = document.createElement("span");
+          title.className = "result-title";
+          title.textContent = item.id;
+
+          const meta = document.createElement("span");
+          meta.className = "result-meta";
+          meta.textContent =
+            (item.status || "Вільний") +
+            (item.linkedAircraft ? " • " + item.linkedAircraft : "");
+
+          button.appendChild(title);
+          button.appendChild(meta);
+
+          button.addEventListener("click", function () {
+            closeStarlinkSearchModal();
+            showStarlinkInfo(item);
+          });
+
+          container.appendChild(button);
+        });
+      }
+
+      function showStarlinkInfo(item) {
+        document.getElementById("starlinkInfoId").textContent =
+          item.id || "Не вказано";
+        document.getElementById("starlinkInfoStatus").textContent =
+          item.status || "Вільний";
+        setFieldValue(
+          "starlinkInfoAircraft",
+          item.linkedAircraft,
+          "Не прив’язаний",
+        );
+        setFieldValue("starlinkInfoSerial", item.serialNumber, "Не вказано");
+        setFieldValue("starlinkInfoComment", item.comment, "Немає коментаря");
+        document.getElementById("starlinkInfoModal").classList.remove("hidden");
+      }
+
+      function clearStarlinkSearch() {
+        document.getElementById("starlinkSearchInput").value = "";
+        document.getElementById("starlinkSearchResults").innerHTML = "";
+        hideGenericMessage("starlinkSearchMessage");
+      }
+
+      function createStarlinkFromApp() {
+        const id = document.getElementById("newStarlinkId").value.trim();
+        const serialNumber = document
+          .getElementById("newStarlinkSerial")
+          .value.trim();
+        const comment = document
+          .getElementById("newStarlinkComment")
+          .value.trim();
+
+        setFormDisabled("createStarlinkModal", true);
+        showGenericMessage(
+          "createStarlinkMessage",
+          "Створення STARLINK…",
+          "info",
+        );
+
+        apiRequest(
+          {
+            action: "createStarlink",
+            serialNumber: serialNumber,
+            comment: comment,
+          },
+          function (response) {
+            setFormDisabled("createStarlinkModal", false);
+
+            if (!response.ok) {
+              showGenericMessage(
+                "createStarlinkMessage",
+                response.error || "Не вдалося створити STARLINK",
+                "error",
+              );
+              return;
+            }
+
+            showGenericMessage(
+              "createStarlinkMessage",
+              response.result.message || "STARLINK створено",
+              "success",
+            );
+
+            if (navigator.vibrate) navigator.vibrate(150);
+
+            setTimeout(function () {
+              closeCreateStarlinkModal();
+              showStarlinkInfo(response.result.starlink);
+            }, 800);
+          },
+        );
+      }
+
+
+
+      function refreshQrQueueCount() {
+        apiRequest(
+          {
+            action: "getQrQueue"
+          },
+          function (response) {
+            if (!response.ok) {
+              return;
+            }
+
+            const count =
+              (response.queue || []).length;
+
+            const element =
+              document.getElementById(
+                "qrQueueMenuCount"
+              );
+
+            element.textContent =
+              count > 0
+                ? " (" + count + ")"
+                : "";
+          }
+        );
+      }
+
+      function openQrQueueModal() {
+        closeAdminMenu();
+
+        qrQueueItems = [];
+
+        document
+          .getElementById("qrQueueModal")
+          .classList.remove("hidden");
+
+        document.getElementById(
+          "qrQueueSummary"
+        ).textContent = "Завантаження…";
+
+        document.getElementById(
+          "qrQueueList"
+        ).innerHTML = "";
+
+        hideGenericMessage(
+          "qrQueueMessage"
+        );
+
+        setQrQueueButtonsDisabled(true);
+
+        apiRequest(
+          {
+            action: "getQrQueue"
+          },
+          function (response) {
+            setQrQueueButtonsDisabled(false);
+
+            if (!response.ok) {
+              showGenericMessage(
+                "qrQueueMessage",
+                response.error ||
+                  "Не вдалося завантажити чергу",
+                "error"
+              );
+              return;
+            }
+
+            qrQueueItems =
+              response.queue || [];
+
+            renderQrQueue();
+
+            apiRequest(
+              {
+                action: "getPrintSettings"
+              },
+              function (settingsResponse) {
+                if (!settingsResponse.ok) {
+                  return;
+                }
+
+                currentPrintSettings =
+                  settingsResponse.settings;
+
+                renderPrintSettingsSummary(
+                  currentPrintSettings
+                );
+              }
+            );
+          }
+        );
+      }
+
+      function closeQrQueueModal() {
+        document
+          .getElementById("qrQueueModal")
+          .classList.add("hidden");
+
+        hideGenericMessage(
+          "qrQueueMessage"
+        );
+      }
+
+      function renderQrQueue() {
+        const container =
+          document.getElementById(
+            "qrQueueList"
+          );
+
+        const summary =
+          document.getElementById(
+            "qrQueueSummary"
+          );
+
+        container.innerHTML = "";
+
+        summary.textContent =
+          "Очікують друку: " +
+          qrQueueItems.length;
+
+        if (!qrQueueItems.length) {
+          container.innerHTML =
+            '<div class="no-items">' +
+            "Черга порожня" +
+            "</div>";
+
+          setQrQueueButtonsDisabled(true);
+          return;
+        }
+
+        setQrQueueButtonsDisabled(false);
+
+        qrQueueItems.forEach(function (item) {
+          const label =
+            document.createElement("label");
+
+          label.className = "queue-item";
+
+          const checkbox =
+            document.createElement("input");
+
+          checkbox.type = "checkbox";
+          checkbox.className =
+            "qr-queue-checkbox";
+          checkbox.value = item.id;
+          checkbox.checked = true;
+
+          const text =
+            document.createElement("span");
+
+          text.className =
+            "queue-item-text";
+
+          const id =
+            document.createElement("span");
+
+          id.className = "queue-item-id";
+          id.textContent = item.id;
+
+          const date =
+            document.createElement("span");
+
+          date.className =
+            "queue-item-date";
+
+          date.textContent =
+            item.created ||
+            "Дата не вказана";
+
+          text.appendChild(id);
+          text.appendChild(date);
+
+          label.appendChild(checkbox);
+          label.appendChild(text);
+
+          container.appendChild(label);
+        });
+      }
+
+      function toggleAllQrQueue(checked) {
+        document
+          .querySelectorAll(
+            ".qr-queue-checkbox"
+          )
+          .forEach(function (checkbox) {
+            checkbox.checked = checked;
+          });
+      }
+
+      function getSelectedQrQueueIds() {
+        return Array.from(
+          document.querySelectorAll(
+            ".qr-queue-checkbox:checked"
+          )
+        ).map(function (checkbox) {
+          return checkbox.value;
+        });
+      }
+
+      function setQrQueueButtonsDisabled(
+        disabled
+      ) {
+        document.getElementById(
+          "createQrPdfButton"
+        ).disabled = disabled;
+
+        document.getElementById(
+          "markQrPrintedButton"
+        ).disabled = disabled;
+      }
+
+      function createQrDataUrlForId(id) {
+        const holder =
+          document.createElement("div");
+
+        holder.style.position = "fixed";
+        holder.style.left = "-10000px";
+        holder.style.top = "-10000px";
+
+        document.body.appendChild(holder);
+
+        new QRCode(holder, {
+          text: "HC1:" + id,
+          width: 600,
+          height: 600,
+          correctLevel:
+            QRCode.CorrectLevel.H
+        });
+
+        const canvas =
+          holder.querySelector("canvas");
+
+        const image =
+          holder.querySelector("img");
+
+        const dataUrl = canvas
+          ? canvas.toDataURL("image/png")
+          : image
+            ? image.src
+            : "";
+
+        holder.remove();
+
+        return dataUrl;
+      }
+
+      function createQrQueuePdf() {
+        const ids =
+          getSelectedQrQueueIds();
+
+        if (!ids.length) {
+          showGenericMessage(
+            "qrQueueMessage",
+            "Вибери хоча б один QR-код",
+            "error"
+          );
+          return;
+        }
+
+        if (
+          !window.jspdf ||
+          !window.jspdf.jsPDF
+        ) {
+          showGenericMessage(
+            "qrQueueMessage",
+            "Не завантажилася бібліотека PDF",
+            "error"
+          );
+          return;
+        }
+
+        setQrQueueButtonsDisabled(true);
+
+        showGenericMessage(
+          "qrQueueMessage",
+          "Завантаження налаштувань принтера…",
+          "info"
+        );
+
+        apiRequest(
+          {
+            action: "getPrintSettings"
+          },
+          function (response) {
+            if (!response.ok) {
+              setQrQueueButtonsDisabled(
+                false
+              );
+
+              showGenericMessage(
+                "qrQueueMessage",
+                response.error ||
+                  "Не вдалося отримати " +
+                  "налаштування друку",
+                "error"
+              );
+              return;
+            }
+
+            currentPrintSettings =
+              response.settings;
+
+            renderPrintSettingsSummary(
+              currentPrintSettings
+            );
+
+            generateLabelPdf(
+              ids,
+              currentPrintSettings
+            );
+          }
+        );
+      }
+
+      function renderPrintSettingsSummary(
+        settings
+      ) {
+        const element =
+          document.getElementById(
+            "printSettingsSummary"
+          );
+
+        if (!settings) {
+          element.textContent = "";
+          return;
+        }
+
+        element.textContent =
+          settings.printer +
+          " • " +
+          settings.labelWidth +
+          " × " +
+          settings.labelHeight +
+          " мм";
+      }
+
+      function generateLabelPdf(
+        ids,
+        settings
+      ) {
+        showGenericMessage(
+          "qrQueueMessage",
+          "Створення PDF для XP-420B…",
+          "info"
+        );
+
+        try {
+          const jsPDF =
+            window.jspdf.jsPDF;
+
+          const width = Number(
+            settings.labelWidth
+          );
+
+          const height = Number(
+            settings.labelHeight
+          );
+
+          const orientation =
+            width >= height
+              ? "landscape"
+              : "portrait";
+
+          const pdf = new jsPDF({
+            orientation: orientation,
+            unit: "mm",
+            format: [width, height],
+            compress: true
+          });
+
+          ids.forEach(function (id, index) {
+            if (index > 0) {
+              pdf.addPage(
+                [width, height],
+                orientation
+              );
+            }
+
+            const queueItem =
+              qrQueueItems.find(
+                function (item) {
+                  return item.id === id;
+                }
+              ) || {};
+
+            drawLabelPage(
+              pdf,
+              id,
+              queueItem.serialNumber || "",
+              settings
+            );
+          });
+
+          const filename =
+            "Hornet_XP420B_" +
+            new Date()
+              .toISOString()
+              .slice(0, 10) +
+            ".pdf";
+
+          pdf.save(filename);
+
+          showGenericMessage(
+            "qrQueueMessage",
+            "PDF створено: одна сторінка — " +
+              "одна етикетка. Друкуй у " +
+              "масштабі 100%.",
+            "success"
+          );
+        } catch (error) {
+          showGenericMessage(
+            "qrQueueMessage",
+            error.message ||
+              "Не вдалося створити PDF",
+            "error"
+          );
+        } finally {
+          setQrQueueButtonsDisabled(
+            false
+          );
+        }
+      }
+
+      function drawLabelPage(
+        pdf,
+        aircraftId,
+        serialNumber,
+        settings
+      ) {
+        const width = Number(
+          settings.labelWidth
+        );
+
+        const height = Number(
+          settings.labelHeight
+        );
+
+        const margin = Number(
+          settings.margin
+        );
+
+        const title =
+          String(settings.title || "")
+            .trim();
+
+        const showSerial =
+          Boolean(settings.showSerial);
+
+        const qrData =
+          createQrDataUrlForId(
+            aircraftId
+          );
+
+        const titleSpace =
+          title ? 4 : 0;
+
+        const idSpace = 5;
+
+        const serialSpace =
+          showSerial && serialNumber
+            ? 3.5
+            : 0;
+
+        const availableQrHeight =
+          height -
+          margin * 2 -
+          titleSpace -
+          idSpace -
+          serialSpace;
+
+        const qrSize = Math.min(
+          Number(settings.qrSize),
+          width - margin * 2,
+          availableQrHeight
+        );
+
+        const qrX =
+          (width - qrSize) / 2;
+
+        let cursorY = margin;
+
+        if (title) {
+          pdf.setFont(
+            "helvetica",
+            "normal"
+          );
+
+          pdf.setFontSize(7);
+          pdf.setTextColor(90);
+
+          pdf.text(
+            title,
+            width / 2,
+            cursorY + 2.5,
+            {
+              align: "center"
+            }
+          );
+
+          cursorY += titleSpace;
+        }
+
+        pdf.addImage(
+          qrData,
+          "PNG",
+          qrX,
+          cursorY,
+          qrSize,
+          qrSize
+        );
+
+        cursorY += qrSize + 1;
+
+        pdf.setTextColor(0);
+        pdf.setFont(
+          "helvetica",
+          "bold"
+        );
+
+        pdf.setFontSize(
+          Number(settings.idFontSize)
+        );
+
+        pdf.text(
+          aircraftId,
+          width / 2,
+          cursorY + 3.2,
+          {
+            align: "center"
+          }
+        );
+
+        cursorY += idSpace;
+
+        if (
+          showSerial &&
+          serialNumber
+        ) {
+          pdf.setFont(
+            "helvetica",
+            "normal"
+          );
+
+          pdf.setFontSize(
+            Number(
+              settings.serialFontSize
+            )
+          );
+
+          pdf.text(
+            "SN: " + serialNumber,
+            width / 2,
+            Math.min(
+              height - margin,
+              cursorY + 1.8
+            ),
+            {
+              align: "center",
+              maxWidth:
+                width - margin * 2
+            }
+          );
+        }
+      }
+
+      function markSelectedQrPrinted() {
+        const ids =
+          getSelectedQrQueueIds();
+
+        if (!ids.length) {
+          showGenericMessage(
+            "qrQueueMessage",
+            "Вибери хоча б один QR-код",
+            "error"
+          );
+          return;
+        }
+
+        const confirmed = window.confirm(
+          "Позначити вибрані QR-коди " +
+            "надрукованими?"
+        );
+
+        if (!confirmed) {
+          return;
+        }
+
+        setQrQueueButtonsDisabled(true);
+
+        showGenericMessage(
+          "qrQueueMessage",
+          "Оновлення черги…",
+          "info"
+        );
+
+        apiRequest(
+          {
+            action: "markQrPrinted",
+            ids: ids.join(",")
+          },
+          function (response) {
+            setQrQueueButtonsDisabled(
+              false
+            );
+
+            if (!response.ok) {
+              showGenericMessage(
+                "qrQueueMessage",
+                response.error ||
+                  "Не вдалося оновити чергу",
+                "error"
+              );
+              return;
+            }
+
+            showGenericMessage(
+              "qrQueueMessage",
+              response.result.message,
+              "success"
+            );
+
+            qrQueueItems =
+              qrQueueItems.filter(
+                function (item) {
+                  return !ids.includes(
+                    item.id
+                  );
+                }
+              );
+
+            renderQrQueue();
+            refreshQrQueueCount();
+          }
+        );
+      }
+
+      function showAircraftQr(aircraftId) {
+        const id = String(
+          aircraftId || selectedAircraftId || "",
+        )
+          .trim()
+          .toUpperCase();
+
+        if (!/^HN-\d{4}$/.test(id)) {
+          showCardMessage(
+            "Не вдалося визначити ID борта для QR.",
+            "error",
+          );
+          return;
+        }
+
+        generatedQrAircraftId = id;
+        generatedQrDataUrl = "";
+
+        document.getElementById("qrAircraftId").textContent = id;
+        document.getElementById("qrPayload").textContent =
+          "HC1:" + id;
+
+        const preview = document.getElementById("qrPreview");
+        preview.innerHTML = "";
+
+        new QRCode(preview, {
+          text: "HC1:" + id,
+          width: 720,
+          height: 720,
+          correctLevel: QRCode.CorrectLevel.H,
+        });
+
+        document
+          .getElementById("qrModal")
+          .classList.remove("hidden");
+
+        setTimeout(function () {
+          generatedQrDataUrl = getQrDataUrl();
+        }, 100);
+      }
+
+      function closeQrModal() {
+        document
+          .getElementById("qrModal")
+          .classList.add("hidden");
+      }
+
+      function getQrDataUrl() {
+        const preview = document.getElementById("qrPreview");
+        const canvas = preview.querySelector("canvas");
+        const image = preview.querySelector("img");
+
+        if (canvas) {
+          return canvas.toDataURL("image/png");
+        }
+
+        if (image && image.src) {
+          return image.src;
+        }
+
+        return generatedQrDataUrl;
+      }
+
+      function downloadAircraftQr() {
+        if (!generatedQrAircraftId) return;
+
+        const dataUrl = getQrDataUrl();
+
+        if (!dataUrl) {
+          alert("QR ще не готовий. Спробуй ще раз.");
+          return;
+        }
+
+        const link = document.createElement("a");
+
+        link.href = dataUrl;
+        link.download =
+          generatedQrAircraftId + "_QR.png";
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      }
+
+      function printAircraftQr() {
+        if (!generatedQrAircraftId) return;
+
+        const dataUrl = getQrDataUrl();
+
+        if (!dataUrl) {
+          alert("QR ще не готовий. Спробуй ще раз.");
+          return;
+        }
+
+        const printWindow = window.open("", "_blank");
+
+        if (!printWindow) {
+          alert("Браузер заблокував вікно друку.");
+          return;
+        }
+
+        const safeId = escapeHtml(
+          generatedQrAircraftId,
+        );
+
+        printWindow.document.write(
+          "<!doctype html>" +
+            "<html lang='uk'>" +
+            "<head>" +
+            "<meta charset='UTF-8'>" +
+            "<title>" +
+            safeId +
+            "</title>" +
+            "<style>" +
+            "body{" +
+            "margin:0;" +
+            "display:flex;" +
+            "min-height:100vh;" +
+            "align-items:center;" +
+            "justify-content:center;" +
+            "font-family:Arial,sans-serif;" +
+            "}" +
+            ".label{" +
+            "padding:24px;" +
+            "text-align:center;" +
+            "}" +
+            "img{" +
+            "width:320px;" +
+            "height:320px;" +
+            "}" +
+            "h1{" +
+            "margin:12px 0 0;" +
+            "font-size:32px;" +
+            "}" +
+            "</style>" +
+            "</head>" +
+            "<body>" +
+            "<div class='label'>" +
+            "<img src='" +
+            dataUrl +
+            "' alt='QR'>" +
+            "<h1>" +
+            safeId +
+            "</h1>" +
+            "</div>" +
+            "<script>" +
+            "window.onload=function(){" +
+            "window.print();" +
+            "};" +
+            "<\/script>" +
+            "</body>" +
+            "</html>",
+        );
+
+        printWindow.document.close();
+      }
+
+      function openStarlinkModal() {
+        if (!selectedAircraftId) return;
+
+        selectedStarlinkId = currentStarlinkId;
+
+        document.getElementById("starlinkModal").classList.remove("hidden");
+        document.getElementById("starlinkOptions").innerHTML =
+          '<div class="no-items">Завантаження…</div>';
+
+        hideStarlinkMessage();
+
+        apiRequest(
+          { action: "starlinks", id: selectedAircraftId },
+          function (response) {
+            if (!response.ok) {
+              showStarlinkMessage(
+                response.error || "Не вдалося завантажити список",
+                "error",
+              );
+              return;
+            }
+
+            renderStarlinks(response.starlinks || []);
+          },
+        );
+      }
+
+      function renderStarlinks(starlinks) {
+        const container = document.getElementById("starlinkOptions");
+        container.innerHTML = "";
+
+        if (!starlinks.length) {
+          container.innerHTML =
+            '<div class="no-items">Немає доступних STARLINK</div>';
+          return;
+        }
+
+        starlinks.forEach(function (item) {
+          const label = document.createElement("label");
+          label.className =
+            "starlink-option" + (item.current ? " current" : "");
+
+          const radio = document.createElement("input");
+          radio.type = "radio";
+          radio.name = "starlinkChoice";
+          radio.value = item.id;
+          radio.checked = item.id === selectedStarlinkId;
+
+          radio.addEventListener("change", function () {
+            selectedStarlinkId = item.id;
+
+            document
+              .querySelectorAll(".starlink-option")
+              .forEach(function (option) {
+                option.classList.remove("current");
+              });
+
+            label.classList.add("current");
+          });
+
+          const text = document.createElement("span");
+          text.className = "starlink-option-text";
+
+          const id = document.createElement("span");
+          id.className = "starlink-id";
+          id.textContent = item.id;
+
+          const meta = document.createElement("span");
+          meta.className = "starlink-meta";
+          meta.textContent = item.current
+            ? "Зараз встановлений на цьому борту"
+            : item.status || "Вільний";
+
+          text.appendChild(id);
+          text.appendChild(meta);
+          label.appendChild(radio);
+          label.appendChild(text);
+          container.appendChild(label);
+        });
+      }
+
+      function saveStarlinkAssignment() {
+        if (!selectedAircraftId) return;
+
+        if (!selectedStarlinkId) {
+          showStarlinkMessage("Вибери STARLINK зі списку", "error");
+          return;
+        }
+
+        setStarlinkModalButtonsDisabled(true);
+        showStarlinkMessage("Збереження прив’язки…", "info");
+        assignStarlink(selectedStarlinkId);
+      }
+
+      function unlinkStarlink() {
+        if (!selectedAircraftId) return;
+
+        if (!currentStarlinkId) {
+          showStarlinkMessage("На цьому борту STARLINK не прив’язаний", "info");
+          return;
+        }
+
+        setStarlinkModalButtonsDisabled(true);
+        showStarlinkMessage("Відв’язування…", "info");
+        assignStarlink("");
+      }
+
+      function assignStarlink(starlinkId) {
+        apiRequest(
+          {
+            action: "assignStarlink",
+            id: selectedAircraftId,
+            starlink: starlinkId,
+          },
+          function (response) {
+            setStarlinkModalButtonsDisabled(false);
+
+            if (!response.ok) {
+              showStarlinkMessage(
+                response.error || "Помилка прив’язки",
+                "error",
+              );
+              return;
+            }
+
+            currentStarlinkId = response.result.starlink || "";
+            setFieldValue("starlink", currentStarlinkId, "Не прив’язаний");
+
+            if (currentAircraftData)
+              currentAircraftData.starlink = currentStarlinkId;
+
+            showStarlinkMessage(response.result.message, "success");
+
+            if (navigator.vibrate) navigator.vibrate(150);
+
+            setTimeout(closeStarlinkModal, 900);
+          },
+        );
+      }
+
+      function closeStarlinkModal() {
+        document.getElementById("starlinkModal").classList.add("hidden");
+        selectedStarlinkId = "";
+        hideStarlinkMessage();
+        setStarlinkModalButtonsDisabled(false);
+      }
+
+      function setStarlinkModalButtonsDisabled(disabled) {
+        document
+          .querySelectorAll("#starlinkModal button")
+          .forEach(function (button) {
+            button.disabled = disabled;
+          });
+      }
+
+      function openHistoryModal() {
+        if (!selectedAircraftId) return;
+
+        document.getElementById("historyModal").classList.remove("hidden");
+        document.getElementById("historyList").innerHTML =
+          '<div class="no-items">Завантаження…</div>';
+
+        hideHistoryMessage();
+
+        apiRequest(
+          { action: "history", id: selectedAircraftId },
+          function (response) {
+            if (!response.ok) {
+              document.getElementById("historyList").innerHTML = "";
+              showHistoryMessage(
+                response.error || "Не вдалося завантажити історію",
+                "error",
+              );
+              return;
+            }
+
+            renderHistory(response.history || []);
+          },
+        );
+      }
+
+      function renderHistory(items) {
+        const container = document.getElementById("historyList");
+        container.innerHTML = "";
+
+        if (!items.length) {
+          container.innerHTML = '<div class="no-items">Історія відсутня</div>';
+          return;
+        }
+
+        items.forEach(function (item) {
+          const block = document.createElement("div");
+          block.className = "history-item";
+
+          const time = document.createElement("div");
+          time.className = "history-time";
+          time.textContent = item.timestamp;
+
+          const main = document.createElement("div");
+          main.className = "history-main";
+
+          if (
+            item.type === "starlink" ||
+            item.type === "details" ||
+            item.type === "created"
+          ) {
+            main.textContent = item.comment || "Подія";
+          } else {
+            const oldStatus = item.oldStatus || "Не вказано";
+            const newStatus = item.newStatus || "Не вказано";
+
+            main.innerHTML =
+              escapeHtml(oldStatus) +
+              '<span class="history-arrow">→</span>' +
+              escapeHtml(newStatus);
+          }
+
+          block.appendChild(time);
+          block.appendChild(main);
+
+          if (
+            item.comment &&
+            item.type !== "starlink" &&
+            item.type !== "details" &&
+            item.type !== "created"
+          ) {
+            const comment = document.createElement("div");
+            comment.className = "history-comment";
+            comment.textContent = item.comment;
+            block.appendChild(comment);
+          }
+
+          container.appendChild(block);
+        });
+      }
+
+      function closeHistoryModal() {
+        document.getElementById("historyModal").classList.add("hidden");
+        hideHistoryMessage();
+      }
+
+      function openEditModal() {
+        if (!currentAircraftData) return;
+
+        document.getElementById("editSerialNumber").value =
+          currentAircraftData.serialNumber || "";
+
+        document.getElementById("editReceivedDate").value =
+          displayDateToInputDate(currentAircraftData.receivedDate);
+
+        document.getElementById("editComment").value =
+          currentAircraftData.comment || "";
+
+        hideEditMessage();
+        document.getElementById("editModal").classList.remove("hidden");
+      }
+
+      function closeEditModal() {
+        document.getElementById("editModal").classList.add("hidden");
+        hideEditMessage();
+        setEditButtonsDisabled(false);
+      }
+
+      function saveAircraftDetails() {
+        if (!selectedAircraftId) return;
+
+        const serialNumber = document
+          .getElementById("editSerialNumber")
+          .value.trim();
+
+        const receivedDate = document.getElementById("editReceivedDate").value;
+
+        const comment = document.getElementById("editComment").value.trim();
+
+        setEditButtonsDisabled(true);
+        showEditMessage("Збереження даних…", "info");
+
+        apiRequest(
+          {
+            action: "updateDetails",
+            id: selectedAircraftId,
+            serialNumber: serialNumber,
+            receivedDate: receivedDate,
+            comment: comment,
+          },
+          function (response) {
+            setEditButtonsDisabled(false);
+
+            if (!response.ok) {
+              showEditMessage(
+                response.error || "Не вдалося зберегти дані",
+                "error",
+              );
+              return;
+            }
+
+            if (response.result.aircraft) {
+              showAircraft(response.result.aircraft);
+            }
+
+            showEditMessage(
+              response.result.message || "Дані оновлено",
+              "success",
+            );
+
+            if (navigator.vibrate) navigator.vibrate(150);
+
+            setTimeout(closeEditModal, 800);
+          },
+        );
+      }
+
+      function displayDateToInputDate(value) {
+        const text = String(value || "").trim();
+        const match = text.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+
+        if (!match) return "";
+
+        return match[3] + "-" + match[2] + "-" + match[1];
+      }
+
+      function setEditButtonsDisabled(disabled) {
+        document
+          .querySelectorAll("#editModal button")
+          .forEach(function (button) {
+            button.disabled = disabled;
+          });
+
+        document.getElementById("editSerialNumber").disabled = disabled;
+        document.getElementById("editReceivedDate").disabled = disabled;
+        document.getElementById("editComment").disabled = disabled;
+      }
+
+      function setFormDisabled(
+        modalId,
+        disabled
+      ) {
+        document
+          .querySelectorAll(
+            "#" +
+              modalId +
+              " input, #" +
+              modalId +
+              " textarea, #" +
+              modalId +
+              " select, #" +
+              modalId +
+              " button",
+          )
+          .forEach(function (element) {
+            element.disabled = disabled;
+          });
+
+        const aircraftIdInput =
+          document.getElementById(
+            "newAircraftId",
+          );
+
+        if (aircraftIdInput) {
+          aircraftIdInput.readOnly = true;
+        }
+
+        const starlinkIdInput =
+          document.getElementById(
+            "newStarlinkId",
+          );
+
+        if (starlinkIdInput) {
+          starlinkIdInput.readOnly = true;
+        }
+      }
+
+      function disableStatusButtons(disabled) {
+        document.querySelectorAll(".status-button").forEach(function (button) {
+          button.disabled = disabled;
+        });
+      }
+
+      function scanAnotherAircraft() {
+        const cardMessage = document.getElementById("cardMessage");
+        if (cardMessage) cardMessage.remove();
+
+        startScanner();
+      }
+
+      function showCardMessage(text, type) {
+        let element = document.getElementById("cardMessage");
+
+        if (!element) {
+          element = document.createElement("div");
+          element.id = "cardMessage";
+          document.getElementById("aircraftCard").appendChild(element);
+        }
+
+        element.textContent = text;
+        element.className = "message " + (type || "info");
+      }
+
+      function showMessage(text, type) {
+        const element = document.getElementById("message");
+        element.textContent = text;
+        element.className = "message " + (type || "info");
+        element.classList.remove("hidden");
+      }
+
+      function hideMessage() {
+        document.getElementById("message").classList.add("hidden");
+      }
+
+      function showGenericMessage(id, text, type) {
+        const element = document.getElementById(id);
+        element.textContent = text;
+        element.className = "message " + (type || "info");
+        element.classList.remove("hidden");
+      }
+
+      function hideGenericMessage(id) {
+        const element = document.getElementById(id);
+        element.textContent = "";
+        element.className = "message hidden";
+      }
+
+      function showStarlinkMessage(text, type) {
+        showGenericMessage("starlinkMessage", text, type);
+      }
+
+      function hideStarlinkMessage() {
+        hideGenericMessage("starlinkMessage");
+      }
+
+      function showHistoryMessage(text, type) {
+        showGenericMessage("historyMessage", text, type);
+      }
+
+      function hideHistoryMessage() {
+        hideGenericMessage("historyMessage");
+      }
+
+      function showEditMessage(text, type) {
+        showGenericMessage("editMessage", text, type);
+      }
+
+      function hideEditMessage() {
+        hideGenericMessage("editMessage");
+      }
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function apiRequest(parameters, callback) {
+        const callbackName =
+          "hcCallback_" +
+          Date.now() +
+          "_" +
+          Math.floor(Math.random() * 100000);
+
+        const script =
+          document.createElement("script");
+
+        window[callbackName] = function (response) {
+          try {
+            callback(response);
+          } finally {
+            delete window[callbackName];
+            script.remove();
+          }
+        };
+
+        const query = new URLSearchParams({
+          ...parameters,
+          key: API_KEY,
+          callback: callbackName
+        });
+
+        script.src =
+          API_URL + "?" + query.toString();
+
+        script.onerror = function () {
+          delete window[callbackName];
+          script.remove();
+
+          callback({
+            ok: false,
+            error:
+              "Не вдалося з’єднатися з Google Sheets."
+          });
+        };
+
+        document.body.appendChild(script);
+      }
+
+      if ("serviceWorker" in navigator) {
+        window.addEventListener(
+          "load",
+          async function () {
+            try {
+              const registration =
+                await navigator.serviceWorker.register(
+                  "./sw.js",
+                  {
+                    updateViaCache: "none"
+                  }
+                );
+
+              await registration.update();
+
+              setInterval(function () {
+                registration.update();
+              }, 5 * 60 * 1000);
+
+              let refreshing = false;
+
+              navigator.serviceWorker.addEventListener(
+                "controllerchange",
+                function () {
+                  if (refreshing) {
+                    return;
+                  }
+
+                  refreshing = true;
+                  window.location.reload();
+                }
+              );
+            } catch (error) {
+              console.error(
+                "Service Worker error:",
+                error
+              );
+            }
+          }
+        );
+      }
+    </script>
+  </body>
+</html>
