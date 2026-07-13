@@ -1,0 +1,568 @@
+<!doctype html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+
+    <title>Hornet Control</title>
+
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+
+    <meta name="theme-color" content="#111827" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="Hornet Control" />
+
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="topbar">
+        <div class="topbar-title">Hornet Control v1.5.0-alpha1</div>
+
+        <button class="icon-button" onclick="openAdminMenu()" aria-label="Меню">
+          ☰
+        </button>
+      </div>
+
+      <div id="scannerCard" class="card">
+        <h1>Сканер QR</h1>
+
+        <div id="reader"></div>
+
+        <p class="scanner-help">Наведи камеру на QR-код борта</p>
+
+        <button
+          id="cameraButton"
+          class="primary hidden"
+          onclick="startScanner()"
+        >
+          Запустити камеру
+        </button>
+
+        <div id="message" class="message info">Запуск камери…</div>
+      </div>
+
+      <div id="aircraftCard" class="card hidden">
+        <h2 id="aircraftId"></h2>
+
+        <div class="field">
+          <div class="label">Статус</div>
+          <div id="currentStatus"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">STARLINK</div>
+
+          <div class="starlink-row">
+            <div id="starlink" class="value"></div>
+
+            <button class="primary small-button" onclick="openStarlinkModal()">
+              Змінити
+            </button>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label">Серійний номер</div>
+          <div id="serialNumber" class="value"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">Дата отримання</div>
+          <div id="receivedDate" class="value"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">Остання зміна</div>
+          <div id="lastChange" class="value"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">Коментар</div>
+          <div id="comment" class="value"></div>
+        </div>
+
+        <div class="status-section">
+          <div class="section-title">Змінити статус</div>
+
+          <button
+            class="status-button storage"
+            data-status="На складі"
+            onclick="changeStatus('На складі')"
+          >
+            На складі
+          </button>
+          <button
+            class="status-button workshop"
+            data-status="Майстерня"
+            onclick="changeStatus('Майстерня')"
+          >
+            Майстерня
+          </button>
+          <button
+            class="status-button ready"
+            data-status="БГ"
+            onclick="changeStatus('БГ')"
+          >
+            БГ
+          </button>
+          <button
+            class="status-button damaged"
+            data-status="Пошкоджено"
+            onclick="changeStatus('Пошкоджено')"
+          >
+            Пошкоджено
+          </button>
+          <button
+            class="status-button written-off"
+            data-status="Списаний"
+            onclick="changeStatus('Списаний')"
+          >
+            Списаний
+          </button>
+        </div>
+
+        <button class="primary" onclick="openEditModal()">
+          Редагувати дані
+        </button>
+
+        <button class="secondary" onclick="showAircraftQr()">
+          Показати QR
+        </button>
+
+        <button class="secondary" onclick="openHistoryModal()">
+          Історія
+        </button>
+        <button class="secondary" onclick="scanAnotherAircraft()">
+          Сканувати інший борт
+        </button>
+      </div>
+    </div>
+
+    <div id="adminMenuModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Адміністрування</h3>
+
+        <div class="menu-list">
+          <button class="primary" onclick="openAircraftSearchModal()">
+            Пошук борта
+          </button>
+          <button class="primary" onclick="openCreateAircraftModal()">
+            Додати новий борт
+          </button>
+          <button class="secondary" onclick="openStarlinkSearchModal()">
+            Пошук STARLINK
+          </button>
+          <button class="secondary" onclick="openCreateStarlinkModal()">
+            Додати STARLINK
+          </button>
+
+          <button class="secondary" onclick="openQrQueueModal()">
+            QR на друк
+            <span id="qrQueueMenuCount"></span>
+          </button>
+
+          <button class="secondary" onclick="closeAdminMenu()">
+            Закрити
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="aircraftSearchModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Пошук борта</h3>
+
+        <label class="form-label" for="aircraftSearchInput"
+          >ID або серійний номер</label
+        >
+        <input
+          id="aircraftSearchInput"
+          class="form-input"
+          type="text"
+          autocomplete="off"
+          placeholder="HN-0001 або серійний номер"
+        />
+
+        <button class="primary" onclick="searchAircraftFromApp()">
+          Знайти
+        </button>
+
+        <div id="aircraftSearchResults"></div>
+        <div id="aircraftSearchMessage" class="message hidden"></div>
+
+        <button class="secondary" onclick="closeAircraftSearchModal()">
+          Закрити
+        </button>
+      </div>
+    </div>
+
+    <div id="createAircraftModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Новий борт</h3>
+
+        <label class="form-label" for="newAircraftId">ID борта</label>
+        <input
+          id="newAircraftId"
+          class="form-input"
+          type="text"
+          autocomplete="off"
+          placeholder="HN-0019"
+        />
+
+        <label class="form-label" for="newAircraftStatus"
+          >Початковий статус</label
+        >
+        <select id="newAircraftStatus" class="form-input">
+          <option value="На складі">На складі</option>
+          <option value="Майстерня">Майстерня</option>
+          <option value="БГ">БГ</option>
+          <option value="Пошкоджено">Пошкоджено</option>
+          <option value="Списаний">Списаний</option>
+        </select>
+
+        <label class="form-label" for="newAircraftSerial">Серійний номер</label>
+        <input
+          id="newAircraftSerial"
+          class="form-input"
+          type="text"
+          autocomplete="off"
+        />
+
+        <label class="form-label" for="newAircraftDate">Дата отримання</label>
+        <input id="newAircraftDate" class="form-input" type="date" />
+
+        <label class="form-label" for="newAircraftComment">Коментар</label>
+        <textarea
+          id="newAircraftComment"
+          class="form-input form-textarea"
+        ></textarea>
+
+        <div id="createAircraftMessage" class="message hidden"></div>
+
+        <button
+          id="createAircraftButton"
+          class="primary"
+          onclick="createAircraftFromApp()"
+        >
+          Створити борт
+        </button>
+        <button class="secondary" onclick="closeCreateAircraftModal()">
+          Скасувати
+        </button>
+      </div>
+    </div>
+
+    <div id="starlinkSearchModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Пошук STARLINK</h3>
+
+        <label class="form-label" for="starlinkSearchInput"
+          >ID або серійний номер</label
+        >
+        <input
+          id="starlinkSearchInput"
+          class="form-input"
+          type="text"
+          autocomplete="off"
+          placeholder="MINI_001 або серійний номер"
+        />
+
+        <button class="primary" onclick="searchStarlinksFromApp()">
+          Знайти
+        </button>
+
+        <div id="starlinkSearchResults"></div>
+        <div id="starlinkSearchMessage" class="message hidden"></div>
+
+        <button class="secondary" onclick="closeStarlinkSearchModal()">
+          Закрити
+        </button>
+      </div>
+    </div>
+
+    <div id="createStarlinkModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Новий STARLINK</h3>
+
+        <label class="form-label" for="newStarlinkId">ID STARLINK</label>
+        <input
+          id="newStarlinkId"
+          class="form-input"
+          type="text"
+          readonly
+          aria-readonly="true"
+          placeholder="Завантаження номера…"
+        />
+
+        <label class="form-label" for="newStarlinkSerial">Серійний номер</label>
+        <input
+          id="newStarlinkSerial"
+          class="form-input"
+          type="text"
+          autocomplete="off"
+        />
+
+        <label class="form-label" for="newStarlinkComment">Коментар</label>
+        <textarea
+          id="newStarlinkComment"
+          class="form-input form-textarea"
+        ></textarea>
+
+        <div id="createStarlinkMessage" class="message hidden"></div>
+
+        <button
+          id="createStarlinkButton"
+          class="primary"
+          onclick="createStarlinkFromApp()"
+        >
+          Створити STARLINK
+        </button>
+        <button class="secondary" onclick="closeCreateStarlinkModal()">
+          Скасувати
+        </button>
+      </div>
+    </div>
+
+    <div id="starlinkInfoModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Картка STARLINK</h3>
+
+        <div class="field">
+          <div class="label">ID</div>
+          <div id="starlinkInfoId" class="value"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">Статус</div>
+          <div id="starlinkInfoStatus" class="value"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">Прив’язаний до</div>
+          <div id="starlinkInfoAircraft" class="value"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">Серійний номер</div>
+          <div id="starlinkInfoSerial" class="value"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">Коментар</div>
+          <div id="starlinkInfoComment" class="value"></div>
+        </div>
+
+        <button class="secondary" onclick="closeStarlinkInfoModal()">
+          Закрити
+        </button>
+      </div>
+    </div>
+
+    <div id="qrQueueModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">
+          QR на друк
+        </h3>
+
+        <div
+          id="qrQueueSummary"
+          class="queue-summary"
+        >
+          Завантаження…
+        </div>
+
+        <label
+          class="form-label"
+          for="printTemplateSelect"
+        >
+          Шаблон друку
+        </label>
+
+        <select
+          id="printTemplateSelect"
+          class="form-input"
+          onchange="onPrintTemplateChange()"
+        >
+          <option value="">
+            Завантаження шаблонів…
+          </option>
+        </select>
+
+        <div
+          id="printSettingsSummary"
+          class="scanner-help"
+        ></div>
+
+        <button
+          class="secondary"
+          onclick="toggleAllQrQueue(true)"
+        >
+          Вибрати все
+        </button>
+
+        <button
+          class="secondary"
+          onclick="toggleAllQrQueue(false)"
+        >
+          Зняти вибір
+        </button>
+
+        <div id="qrQueueList"></div>
+
+        <div
+          id="qrQueueMessage"
+          class="message hidden"
+        ></div>
+
+        <button
+          id="createQrPdfButton"
+          class="primary"
+          onclick="createQrQueuePdf()"
+        >
+          Створити PDF
+        </button>
+
+        <button
+          id="markQrPrintedButton"
+          class="secondary"
+          onclick="markSelectedQrPrinted()"
+        >
+          Позначити надрукованими
+        </button>
+
+        <button
+          class="secondary"
+          onclick="closeQrQueueModal()"
+        >
+          Закрити
+        </button>
+      </div>
+    </div>
+
+    <div id="qrModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">QR-код борта</h3>
+
+        <div
+          id="qrAircraftId"
+          class="value"
+          style="text-align: center"
+        ></div>
+
+        <div id="qrPreview" class="qr-preview"></div>
+
+        <div id="qrPayload" class="qr-payload"></div>
+
+        <button class="primary" onclick="downloadAircraftQr()">
+          Завантажити PNG
+        </button>
+
+        <button class="secondary" onclick="printAircraftQr()">
+          Друкувати
+        </button>
+
+        <button class="secondary" onclick="closeQrModal()">
+          Закрити
+        </button>
+      </div>
+    </div>
+
+    <div id="starlinkModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Прив’язка STARLINK</h3>
+
+        <div id="starlinkOptions">
+          <div class="no-items">Завантаження…</div>
+        </div>
+
+        <div id="starlinkMessage" class="message hidden"></div>
+
+        <button
+          id="saveStarlinkButton"
+          class="primary"
+          onclick="saveStarlinkAssignment()"
+        >
+          Зберегти
+        </button>
+        <button
+          id="unlinkStarlinkButton"
+          class="danger"
+          onclick="unlinkStarlink()"
+        >
+          Відв’язати STARLINK
+        </button>
+        <button class="secondary" onclick="closeStarlinkModal()">
+          Скасувати
+        </button>
+      </div>
+    </div>
+
+    <div id="historyModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Історія борта</h3>
+
+        <div id="historyList">
+          <div class="no-items">Завантаження…</div>
+        </div>
+
+        <div id="historyMessage" class="message hidden"></div>
+
+        <button class="secondary" onclick="closeHistoryModal()">Закрити</button>
+      </div>
+    </div>
+
+    <div id="editModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Редагування борта</h3>
+
+        <label class="form-label" for="editSerialNumber">Серійний номер</label>
+        <input
+          id="editSerialNumber"
+          class="form-input"
+          type="text"
+          autocomplete="off"
+        />
+
+        <label class="form-label" for="editReceivedDate">Дата отримання</label>
+        <input id="editReceivedDate" class="form-input" type="date" />
+
+        <label class="form-label" for="editComment">Коментар</label>
+        <textarea id="editComment" class="form-input form-textarea"></textarea>
+
+        <div id="editMessage" class="message hidden"></div>
+
+        <button
+          id="saveDetailsButton"
+          class="primary"
+          onclick="saveAircraftDetails()"
+        >
+          Зберегти
+        </button>
+        <button class="secondary" onclick="closeEditModal()">Скасувати</button>
+      </div>
+    </div>
+    <script src="utils.js"></script>
+    <script src="ui.js"></script>
+    <script src="api.js"></script>
+    <script src="scanner.js"></script>
+    <script src="aircraft.js"></script>
+    <script src="starlink.js"></script>
+    <script src="history.js"></script>
+    <script src="qr.js"></script>
+    <script src="print.js"></script>
+    <script src="dashboard.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
