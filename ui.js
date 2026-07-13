@@ -213,6 +213,7 @@ function closeAllContentModals() {
     "batchModal",
     "diagnosticsModal",
     "backupsModal",
+    "smartSearchModal",
   ].forEach(function (id) {
     document.getElementById(id).classList.add("hidden");
   });

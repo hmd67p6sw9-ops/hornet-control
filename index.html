@@ -28,7 +28,7 @@
   <body>
     <div class="container">
       <div class="topbar">
-        <div class="topbar-title">Hornet Control v1.6.0-alpha2</div>
+        <div class="topbar-title">Hornet Control v1.6.0-beta1</div>
 
         <div class="topbar-actions">
           <button
@@ -437,7 +437,11 @@
         <h3 class="modal-title">Адміністрування</h3>
 
         <div class="menu-list">
-          <button class="primary" onclick="openAircraftSearchModal()">
+          <button class="primary" onclick="openSmartSearchModal()">
+            Швидкий пошук
+          </button>
+
+          <button class="secondary" onclick="openAircraftSearchModal()">
             Пошук борта
           </button>
           <button class="primary" onclick="openCreateAircraftModal()">
@@ -470,6 +474,67 @@
       </div>
     </div>
 
+
+    <div id="smartSearchModal" class="modal hidden">
+      <div class="modal-content smart-search-modal-content">
+        <h3 class="modal-title">Швидкий пошук</h3>
+
+        <p class="smart-search-help">
+          Введи ID, номер, серійний номер або назву обладнання.
+        </p>
+
+        <div class="smart-search-row">
+          <input
+            id="smartSearchInput"
+            class="form-input"
+            type="search"
+            autocomplete="off"
+            enterkeyhint="search"
+            placeholder="Наприклад: 45, HN-0045, MINI 12, серійний номер"
+          />
+
+          <button
+            id="smartSearchButton"
+            class="primary smart-search-button"
+            onclick="runSmartSearch()"
+          >
+            Знайти
+          </button>
+        </div>
+
+        <div class="smart-search-filters" role="group" aria-label="Фільтр результатів">
+          <button
+            class="smart-search-filter active"
+            data-filter="all"
+            onclick="setSmartSearchFilter('all')"
+          >
+            Усі
+          </button>
+          <button
+            class="smart-search-filter"
+            data-filter="aircraft"
+            onclick="setSmartSearchFilter('aircraft')"
+          >
+            Борти
+          </button>
+          <button
+            class="smart-search-filter"
+            data-filter="starlink"
+            onclick="setSmartSearchFilter('starlink')"
+          >
+            Starlink
+          </button>
+        </div>
+
+        <div id="smartSearchSummary" class="smart-search-summary"></div>
+        <div id="smartSearchResults"></div>
+        <div id="smartSearchMessage" class="message hidden"></div>
+
+        <button class="secondary" onclick="closeSmartSearchModal()">
+          Закрити
+        </button>
+      </div>
+    </div>
 
     <div id="diagnosticsModal" class="modal hidden">
       <div class="modal-content diagnostics-modal-content">
@@ -951,6 +1016,7 @@
     <script src="batch.js"></script>
     <script src="diagnostics.js"></script>
     <script src="backups.js"></script>
+    <script src="search.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
