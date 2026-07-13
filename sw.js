@@ -1,4 +1,4 @@
-const CACHE_NAME = "hornet-control-static-v150-beta1-batch1";
+const CACHE_NAME = "hornet-control-static-v150-rc1-polish1";
 
 const STATIC_FILES = [
   "./",

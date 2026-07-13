@@ -209,6 +209,8 @@ function closeAllContentModals() {
     "starlinkModal",
     "historyModal",
     "editModal",
+    "dashboardListModal",
+    "batchModal",
   ].forEach(function (id) {
     document.getElementById(id).classList.add("hidden");
   });
@@ -237,6 +239,7 @@ function setStatusBadge(status) {
     Майстерня: "badge-workshop",
     БГ: "badge-ready",
     Пошкоджено: "badge-damaged",
+    Використаний: "badge-written-off",
     Списаний: "badge-written-off",
   };
 
