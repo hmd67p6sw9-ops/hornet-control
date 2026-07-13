@@ -271,6 +271,84 @@ function renderPrintTemplateSummary() {
     " мм • одна сторінка = одна етикетка";
 }
 
+function isIosDevice() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (
+      navigator.platform === "MacIntel" &&
+      navigator.maxTouchPoints > 1
+    );
+}
+
+function preparePdfDeliveryTarget() {
+  if (!isIosDevice()) {
+    return null;
+  }
+
+  const previewWindow = window.open(
+    "about:blank",
+    "_blank"
+  );
+
+  if (previewWindow) {
+    previewWindow.document.title = "Створення PDF…";
+    previewWindow.document.body.innerHTML =
+      '<div style="font-family: Arial, sans-serif; padding: 24px; text-align: center;">' +
+      '<h2>Створення PDF…</h2>' +
+      '<p>Не закривай це вікно.</p>' +
+      '</div>';
+  }
+
+  return previewWindow;
+}
+
+function closePdfDeliveryTarget(previewWindow) {
+  if (!previewWindow || previewWindow.closed) {
+    return;
+  }
+
+  try {
+    previewWindow.close();
+  } catch (error) {
+    console.warn(
+      "Не вдалося закрити вікно PDF:",
+      error
+    );
+  }
+}
+
+function deliverPdfFile(
+  pdf,
+  filename,
+  previewWindow
+) {
+  if (!isIosDevice()) {
+    pdf.save(filename);
+    return;
+  }
+
+  const blob = pdf.output("blob");
+  const blobUrl = URL.createObjectURL(blob);
+
+  if (previewWindow && !previewWindow.closed) {
+    previewWindow.location.replace(blobUrl);
+  } else {
+    const link = document.createElement("a");
+
+    link.href = blobUrl;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.download = filename;
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
+  window.setTimeout(function () {
+    URL.revokeObjectURL(blobUrl);
+  }, 120000);
+}
+
 function createQrQueuePdf() {
   const ids =
     getSelectedQrQueueIds();
@@ -293,6 +371,9 @@ function createQrQueuePdf() {
     return;
   }
 
+  const pdfDeliveryTarget =
+    preparePdfDeliveryTarget();
+
   setQrQueueButtonsDisabled(true);
 
   showGenericMessage(
@@ -305,10 +386,14 @@ function createQrQueuePdf() {
     .then(function () {
       generatePdfByTemplate(
         ids,
-        selectedPrintTemplate
+        selectedPrintTemplate,
+        pdfDeliveryTarget
       );
     })
     .catch(function (error) {
+      closePdfDeliveryTarget(
+        pdfDeliveryTarget
+      );
       setQrQueueButtonsDisabled(
         false
       );
@@ -324,12 +409,14 @@ function createQrQueuePdf() {
 
 function generatePdfByTemplate(
   ids,
-  template
+  template,
+  pdfDeliveryTarget
 ) {
   if (template.type === "SHEET") {
     generateSheetLabelPdf(
       ids,
-      template
+      template,
+      pdfDeliveryTarget
     );
     return;
   }
@@ -337,10 +424,15 @@ function generatePdfByTemplate(
   if (template.type === "ROLL") {
     generateRollLabelPdf(
       ids,
-      template
+      template,
+      pdfDeliveryTarget
     );
     return;
   }
+
+  closePdfDeliveryTarget(
+    pdfDeliveryTarget
+  );
 
   setQrQueueButtonsDisabled(false);
 
@@ -354,7 +446,8 @@ function generatePdfByTemplate(
 
 function generateSheetLabelPdf(
   ids,
-  template
+  template,
+  pdfDeliveryTarget
 ) {
   showGenericMessage(
     "qrQueueMessage",
@@ -460,7 +553,11 @@ function generateSheetLabelPdf(
         .slice(0, 10) +
       ".pdf";
 
-    pdf.save(filename);
+    deliverPdfFile(
+      pdf,
+      filename,
+      pdfDeliveryTarget
+    );
 
     showGenericMessage(
       "qrQueueMessage",
@@ -468,6 +565,10 @@ function generateSheetLabelPdf(
       "success"
     );
   } catch (error) {
+    closePdfDeliveryTarget(
+      pdfDeliveryTarget
+    );
+
     showGenericMessage(
       "qrQueueMessage",
       error.message ||
@@ -575,7 +676,8 @@ function drawSheetLabel(
 
 function generateRollLabelPdf(
   ids,
-  template
+  template,
+  pdfDeliveryTarget
 ) {
   showGenericMessage(
     "qrQueueMessage",
@@ -637,7 +739,11 @@ function generateRollLabelPdf(
         .slice(0, 10) +
       ".pdf";
 
-    pdf.save(filename);
+    deliverPdfFile(
+      pdf,
+      filename,
+      pdfDeliveryTarget
+    );
 
     showGenericMessage(
       "qrQueueMessage",
@@ -645,6 +751,10 @@ function generateRollLabelPdf(
       "success"
     );
   } catch (error) {
+    closePdfDeliveryTarget(
+      pdfDeliveryTarget
+    );
+
     showGenericMessage(
       "qrQueueMessage",
       error.message ||
