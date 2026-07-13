@@ -1063,3 +1063,24 @@ button:disabled {
     width: 100%;
   }
 }
+
+
+/* v1.6.0-RC1 — connection reliability */
+.connection-status {
+  margin: -4px 0 12px;
+  padding: 10px 12px;
+  border-radius: 11px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.connection-status.offline {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.connection-status.restored {
+  background: #dcfce7;
+  color: #166534;
+}

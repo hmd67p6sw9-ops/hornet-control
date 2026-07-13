@@ -1,14 +1,11 @@
-Hornet Control v1.6.0-beta1 — Smart Search
+Hornet Control v1.6.0-RC1 — Reliability
 
-Замінити поверх:
+Замінити поверх існуючих файлів:
 - index.html
 - styles.css
-- ui.js
+- api.js
 - sw.js
 
-Додати новий файл:
-- search.js
+app.js не змінюється. API_URL та API_KEY залишаються на місці.
 
-app.js не змінювати.
-
-Після завантаження зробити commit, повністю закрити PWA та відкрити знову.
+Після commit повністю закрий PWA та відкрий її знову.
