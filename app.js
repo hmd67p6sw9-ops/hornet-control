@@ -1,6 +1,6 @@
 /* Hornet Control v1.5.0-RC1 */
 
-const API_URL = "      https://script.google.com/macros/s/AKfycbwphLvMa8Ufe2HYMFz2Vg9LqJenq3alIktIiGESiYxN6mwtkCarxxoAiETCfPksnvD3/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwphLvMa8Ufe2HYMFz2Vg9LqJenq3alIktIiGESiYxN6mwtkCarxxoAiETCfPksnvD3/exec";
 const API_KEY = "HC_7YkP9vLm42QaX8Nr5DzB1UcEe96MwFs";
 
 let scanner = null;
