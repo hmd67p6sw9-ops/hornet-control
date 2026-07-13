@@ -211,6 +211,8 @@ function closeAllContentModals() {
     "editModal",
     "dashboardListModal",
     "batchModal",
+    "diagnosticsModal",
+    "backupsModal",
   ].forEach(function (id) {
     document.getElementById(id).classList.add("hidden");
   });

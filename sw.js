@@ -1,4 +1,4 @@
-const CACHE_NAME = "hornet-control-static-v150-stable1";
+const CACHE_NAME = "hornet-control-static-v160-alpha2-backups1";
 
 const STATIC_FILES = [
   "./",
@@ -15,6 +15,8 @@ const STATIC_FILES = [
   "./print.js",
   "./dashboard.js",
   "./batch.js",
+  "./diagnostics.js",
+  "./backups.js",
   "./app.js",
   "./manifest.webmanifest",
   "./icon-192.png",

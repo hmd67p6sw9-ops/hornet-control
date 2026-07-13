@@ -666,3 +666,308 @@ button:disabled {
   font-size: 24px;
   font-weight: 800;
 }
+
+
+/* =========================
+   SYSTEM DIAGNOSTICS v1.6.0-alpha1
+   ========================= */
+
+.diagnostics-modal-content {
+  max-height: 94vh;
+}
+
+.diagnostics-status {
+  margin-top: 14px;
+  padding: 15px;
+  border-radius: 13px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.diagnostics-loading {
+  background: var(--info);
+  color: #1e3a8a;
+}
+
+.diagnostics-success {
+  background: var(--success);
+  color: #166534;
+}
+
+.diagnostics-error {
+  background: var(--error);
+  color: #991b1b;
+}
+
+.diagnostics-checked-at {
+  min-height: 20px;
+  margin-top: 8px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 13px;
+}
+
+.diagnostics-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.diagnostics-summary-card {
+  padding: 12px 6px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.diagnostics-summary-card strong {
+  display: block;
+  font-size: 25px;
+}
+
+.diagnostics-summary-card span {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.diagnostics-count-error {
+  background: #fff7f7;
+}
+
+.diagnostics-count-warning {
+  background: #fffdf5;
+}
+
+.diagnostics-count-success {
+  background: #f6fff8;
+}
+
+.diagnostics-section {
+  margin-top: 20px;
+}
+
+.diagnostics-section-title {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.diagnostics-sheet-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.diagnostics-sheet-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.diagnostics-sheet-main strong,
+.diagnostics-sheet-main span {
+  display: block;
+}
+
+.diagnostics-sheet-main strong {
+  font-size: 16px;
+}
+
+.diagnostics-sheet-main span {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.diagnostics-badge {
+  padding: 6px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.diagnostics-badge-ok {
+  background: var(--success);
+  color: #166534;
+}
+
+.diagnostics-badge-warning {
+  background: var(--warning);
+  color: #92400e;
+}
+
+.diagnostics-empty-success {
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--success);
+  color: #166534;
+  text-align: center;
+  font-weight: 800;
+}
+
+.diagnostics-issue {
+  margin-top: 9px;
+  padding: 13px;
+  border-left: 5px solid;
+  border-radius: 10px;
+}
+
+.diagnostics-issue-error {
+  border-left-color: #dc2626;
+  background: #fff1f2;
+}
+
+.diagnostics-issue-warning {
+  border-left-color: #d97706;
+  background: #fffbeb;
+}
+
+.diagnostics-issue-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.diagnostics-issue-severity,
+.diagnostics-issue-code {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.diagnostics-issue-code {
+  color: var(--muted);
+  font-family: monospace;
+}
+
+.diagnostics-issue-message {
+  margin-top: 8px;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.diagnostics-issue-source {
+  margin-top: 5px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.diagnostics-details {
+  margin-top: 9px;
+}
+
+.diagnostics-details summary {
+  cursor: pointer;
+  color: #374151;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.diagnostics-details pre {
+  max-height: 220px;
+  margin: 8px 0 0;
+  overflow: auto;
+  padding: 10px;
+  border-radius: 8px;
+  background: #111827;
+  color: #f9fafb;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+}
+
+/* Backups v1.6.0-alpha2 */
+
+.backups-modal-content {
+  max-height: 92vh;
+}
+
+.backups-help {
+  margin: 0 0 14px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.backups-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 22px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.backups-section-header .small-button {
+  min-width: 96px;
+}
+
+.backup-item {
+  margin-top: 10px;
+  padding: 13px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.backup-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.backup-id {
+  font-size: 17px;
+}
+
+.backup-status {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.backup-status-available {
+  background: var(--success);
+  color: #166534;
+}
+
+.backup-status-missing {
+  background: var(--error);
+  color: #991b1b;
+}
+
+.backup-date {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.backup-comment {
+  margin-top: 8px;
+  color: #374151;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.backup-open-button {
+  margin-top: 10px;
+  padding: 11px;
+  font-size: 15px;
+}
