@@ -28,7 +28,7 @@
   <body>
     <div class="container">
       <div class="topbar">
-        <div class="topbar-title">Hornet Control v1.5.0-alpha2</div>
+        <div class="topbar-title">Hornet Control v1.5.0-beta1</div>
 
         <div class="topbar-actions">
           <button
@@ -174,7 +174,7 @@
 
           <button
             class="secondary dashboard-action"
-            onclick="showBatchComingSoon()"
+            onclick="openBatchModal()"
           >
             📦 Нова партія
           </button>
@@ -311,6 +311,106 @@
       </div>
     </div>
 
+
+
+
+    <div id="batchModal" class="modal hidden">
+      <div class="modal-content">
+        <div id="batchFormStep">
+          <h3 class="modal-title">Нова партія</h3>
+
+          <label class="form-label" for="batchQuantity">Кількість</label>
+          <input
+            id="batchQuantity"
+            class="form-input"
+            type="number"
+            min="1"
+            max="500"
+            inputmode="numeric"
+            placeholder="Наприклад, 20"
+            oninput="renderBatchSerialInputs()"
+          />
+
+          <label class="form-label" for="batchStatus">Статус</label>
+          <select id="batchStatus" class="form-input">
+            <option value="На складі">На складі</option>
+            <option value="Активний">Активний</option>
+            <option value="БГ">БГ</option>
+            <option value="Майстерня">Майстерня</option>
+            <option value="Пошкоджено">Пошкоджено</option>
+          </select>
+
+          <label class="form-label" for="batchDate">Дата отримання</label>
+          <input id="batchDate" class="form-input" type="date" />
+
+          <label class="form-label" for="batchComment">Коментар</label>
+          <textarea
+            id="batchComment"
+            class="form-input form-textarea batch-comment"
+            placeholder="Необов’язково"
+          ></textarea>
+
+          <div class="form-label">Серійні номери</div>
+
+          <div class="batch-serial-mode">
+            <label class="batch-radio-option">
+              <input
+                type="radio"
+                name="batchSerialMode"
+                value="now"
+                onchange="onBatchSerialModeChange()"
+              />
+              <span>Ввести зараз</span>
+            </label>
+
+            <label class="batch-radio-option">
+              <input
+                type="radio"
+                name="batchSerialMode"
+                value="later"
+                checked
+                onchange="onBatchSerialModeChange()"
+              />
+              <span>Додати пізніше</span>
+            </label>
+          </div>
+
+          <div id="batchSerialInputs" class="batch-serial-inputs hidden"></div>
+
+          <div id="batchMessage" class="message hidden"></div>
+
+          <button
+            id="createBatchButton"
+            class="primary"
+            onclick="createBatchFromApp()"
+          >
+            Створити партію
+          </button>
+
+          <button class="secondary" onclick="closeBatchModal()">
+            Скасувати
+          </button>
+        </div>
+
+        <div id="batchResultStep" class="hidden">
+          <h3 class="modal-title">Партію створено</h3>
+
+          <div class="batch-result-count">
+            Створено: <strong id="batchResultQuantity">0</strong>
+          </div>
+
+          <div id="batchResultRange" class="batch-result-range"></div>
+
+          <button class="primary" onclick="printCreatedBatchQr()">
+            🖨 Друкувати QR
+          </button>
+
+          <button class="secondary" onclick="finishBatchAndShowDashboard()">
+            Dashboard
+          </button>
+        </div>
+      </div>
+    </div>
 
     <div id="dashboardListModal" class="modal hidden">
       <div class="modal-content">
@@ -745,6 +845,7 @@
     <script src="qr.js"></script>
     <script src="print.js"></script>
     <script src="dashboard.js"></script>
+    <script src="batch.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

@@ -590,3 +590,79 @@ button:disabled {
     transform: rotate(360deg);
   }
 }
+
+
+/* =========================
+   BATCH UI v1.5.0-beta1
+   ========================= */
+
+.batch-comment {
+  min-height: 84px;
+}
+
+.batch-serial-mode {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.batch-radio-option {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 13px;
+  border: 2px solid var(--line);
+  border-radius: 12px;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.batch-radio-option input {
+  width: 21px;
+  height: 21px;
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.batch-serial-inputs {
+  max-height: 42vh;
+  margin-top: 12px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.batch-serial-row {
+  display: grid;
+  grid-template-columns: 38px 1fr;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.batch-serial-number {
+  color: var(--muted);
+  text-align: center;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.batch-result-count {
+  margin-top: 18px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 18px;
+}
+
+.batch-result-count strong {
+  color: var(--text);
+}
+
+.batch-result-range {
+  margin: 16px 0 22px;
+  padding: 18px 12px;
+  border-radius: 14px;
+  background: var(--success);
+  text-align: center;
+  font-size: 24px;
+  font-weight: 800;
+}
