@@ -1,4 +1,4 @@
-const CACHE_NAME = "hornet-control-static-v150-alpha1-modular";
+const CACHE_NAME = "hornet-control-static-v150-alpha2-dashboard";
 
 const STATIC_FILES = [
   "./",

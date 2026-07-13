@@ -28,14 +28,167 @@
   <body>
     <div class="container">
       <div class="topbar">
-        <div class="topbar-title">Hornet Control v1.5.0-alpha1</div>
+        <div class="topbar-title">Hornet Control v1.5.0-alpha2</div>
 
-        <button class="icon-button" onclick="openAdminMenu()" aria-label="Меню">
-          ☰
-        </button>
+        <div class="topbar-actions">
+          <button
+            class="icon-button"
+            onclick="showDashboard()"
+            aria-label="Головний екран"
+          >
+            ⌂
+          </button>
+
+          <button
+            class="icon-button"
+            onclick="openAdminMenu()"
+            aria-label="Меню"
+          >
+            ☰
+          </button>
+        </div>
       </div>
 
-      <div id="scannerCard" class="card">
+      <div id="dashboardCard" class="card dashboard-card">
+        <div class="dashboard-heading">
+          <div>
+            <h1 class="dashboard-title">Dashboard</h1>
+            <div id="dashboardUpdated" class="dashboard-updated">
+              Завантаження…
+            </div>
+          </div>
+
+          <button
+            id="dashboardRefreshButton"
+            class="dashboard-refresh-button"
+            onclick="refreshDashboard()"
+            aria-label="Оновити Dashboard"
+          >
+            ↻
+          </button>
+        </div>
+
+        <div id="dashboardMessage" class="message info hidden"></div>
+
+        <section class="dashboard-section">
+          <h3 class="dashboard-section-title">Борти</h3>
+
+          <button
+            class="dashboard-row"
+            onclick="openAircraftStatusList('Активний', 'Активні борти')"
+          >
+            <span>Активні</span>
+            <strong id="dashboardAircraftActive">—</strong>
+          </button>
+
+          <button
+            class="dashboard-row"
+            onclick="openAircraftStatusList('На складі', 'Борти на складі')"
+          >
+            <span>На складі</span>
+            <strong id="dashboardAircraftWarehouse">—</strong>
+          </button>
+
+          <button
+            class="dashboard-row"
+            onclick="openAircraftStatusList('БГ', 'Борти БГ')"
+          >
+            <span>БГ</span>
+            <strong id="dashboardAircraftReady">—</strong>
+          </button>
+
+          <button
+            class="dashboard-row"
+            onclick="openAircraftStatusList('Майстерня', 'Борти в майстерні')"
+          >
+            <span>Майстерня</span>
+            <strong id="dashboardAircraftWorkshop">—</strong>
+          </button>
+
+          <button
+            class="dashboard-row"
+            onclick="openAircraftStatusList('Пошкоджено', 'Пошкоджені борти')"
+          >
+            <span>Пошкоджено</span>
+            <strong id="dashboardAircraftDamaged">—</strong>
+          </button>
+
+          <button
+            class="dashboard-row"
+            onclick="openAircraftStatusList('Використаний', 'Використані борти')"
+          >
+            <span>Використані</span>
+            <strong id="dashboardAircraftUsed">—</strong>
+          </button>
+        </section>
+
+        <section class="dashboard-section">
+          <h3 class="dashboard-section-title">Starlink</h3>
+
+          <button
+            class="dashboard-row"
+            onclick="openStarlinkStatusList('Вільний', 'Вільні Starlink')"
+          >
+            <span>Вільні</span>
+            <strong id="dashboardStarlinkFree">—</strong>
+          </button>
+
+          <button
+            class="dashboard-row"
+            onclick="openStarlinkStatusList('На борту', 'Starlink на бортах')"
+          >
+            <span>На бортах</span>
+            <strong id="dashboardStarlinkAssigned">—</strong>
+          </button>
+
+          <button
+            class="dashboard-row"
+            onclick="openStarlinkStatusList('Несправний', 'Несправні Starlink')"
+          >
+            <span>Несправні</span>
+            <strong id="dashboardStarlinkBroken">—</strong>
+          </button>
+
+          <button
+            class="dashboard-row"
+            onclick="openStarlinkStatusList('Втрачений', 'Втрачені Starlink')"
+          >
+            <span>Втрачені</span>
+            <strong id="dashboardStarlinkLost">—</strong>
+          </button>
+        </section>
+
+        <section class="dashboard-section">
+          <h3 class="dashboard-section-title">QR</h3>
+
+          <button class="dashboard-row" onclick="openQrQueueFromDashboard()">
+            <span>У черзі</span>
+            <strong id="dashboardQrQueued">—</strong>
+          </button>
+        </section>
+
+        <div class="dashboard-actions">
+          <button class="primary dashboard-action" onclick="startScanner()">
+            📷 Сканувати
+          </button>
+
+          <button
+            class="secondary dashboard-action"
+            onclick="showBatchComingSoon()"
+          >
+            📦 Нова партія
+          </button>
+
+          <button
+            class="secondary dashboard-action"
+            onclick="openQrQueueFromDashboard()"
+          >
+            🖨 QR на друк
+          </button>
+        </div>
+      </div>
+
+      <div id="scannerCard" class="card hidden">
         <h1>Сканер QR</h1>
 
         <div id="reader"></div>
@@ -51,6 +204,10 @@
         </button>
 
         <div id="message" class="message info">Запуск камери…</div>
+
+        <button class="secondary" onclick="showDashboard()">
+          Dashboard
+        </button>
       </div>
 
       <div id="aircraftCard" class="card hidden">
@@ -146,6 +303,31 @@
         </button>
         <button class="secondary" onclick="scanAnotherAircraft()">
           Сканувати інший борт
+        </button>
+
+        <button class="secondary" onclick="showDashboard()">
+          Dashboard
+        </button>
+      </div>
+    </div>
+
+
+    <div id="dashboardListModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 id="dashboardListTitle" class="modal-title">Список</h3>
+
+        <div id="dashboardListSummary" class="queue-summary">
+          Завантаження…
+        </div>
+
+        <div id="dashboardListContent">
+          <div class="no-items">Завантаження…</div>
+        </div>
+
+        <div id="dashboardListMessage" class="message hidden"></div>
+
+        <button class="secondary" onclick="closeDashboardListModal()">
+          Закрити
         </button>
       </div>
     </div>
