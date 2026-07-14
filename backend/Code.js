@@ -800,18 +800,7 @@ function findUserByEmail_(usersSheet, email) {
     const rowEmail = normalizeUserEmail_(row[1]);
 
     if (rowEmail === normalizedEmail) {
-      return {
-        row: index + 2,
-        userId: String(row[0] || ""),
-        email: rowEmail,
-        name: String(row[2] || ""),
-        role: String(row[3] || "").trim().toUpperCase(),
-        active: normalizeBoolean_(row[4]),
-        createdAt: row[5] || "",
-        updatedAt: row[6] || "",
-        lastLogin: row[7] || "",
-        comment: String(row[8] || "")
-      };
+      return userFromValues_(row, index + 2);
     }
   }
 
@@ -848,6 +837,477 @@ function appendAuditLog_(
       ]]);
   } catch (loggingError) {
     console.error("AuditLog error:", loggingError);
+  }
+}
+
+
+/* =========================
+   USERS API v1.6.1-alpha2
+   ========================= */
+
+function listUsers() {
+  ensureBackendFoundation_();
+  requirePermission_(PERMISSIONS.USERS_VIEW);
+
+  const sheet = getUsersSheet_();
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow < 2) {
+    return [];
+  }
+
+  return sheet
+    .getRange(2, 1, lastRow - 1, USER_HEADERS.length)
+    .getValues()
+    .map(function (row, index) {
+      return userFromValues_(row, index + 2);
+    })
+    .filter(function (user) {
+      return Boolean(user.userId);
+    })
+    .sort(function (first, second) {
+      if (first.active !== second.active) {
+        return first.active ? -1 : 1;
+      }
+
+      if (first.role !== second.role) {
+        return first.role.localeCompare(second.role);
+      }
+
+      return first.name.localeCompare(second.name);
+    });
+}
+
+
+function getUser(userIdOrEmail) {
+  ensureBackendFoundation_();
+  requirePermission_(PERMISSIONS.USERS_VIEW);
+
+  const identifier = String(userIdOrEmail || "").trim();
+
+  if (!identifier) {
+    throw new Error("Не вказано користувача");
+  }
+
+  const sheet = getUsersSheet_();
+  const user = identifier.includes("@")
+    ? findUserByEmail_(sheet, identifier)
+    : findUserById_(sheet, identifier);
+
+  if (!user) {
+    throw new Error("Користувача не знайдено");
+  }
+
+  return serializeUser_(user);
+}
+
+
+function createUser(email, name, role, active, comment) {
+  ensureBackendFoundation_();
+  const permission = requirePermission_(PERMISSIONS.USERS_MANAGE);
+  const actor = permission.user || getCurrentUser_();
+
+  const normalizedEmail = validateUserEmail_(email);
+  const normalizedName = String(name || "").trim();
+  const normalizedRole = normalizeUserRole_(role);
+  const normalizedActive = active === undefined || active === null || active === ""
+    ? true
+    : normalizeBoolean_(active);
+  const normalizedComment = String(comment || "").trim();
+
+  if (!normalizedName) {
+    throw new Error("Вкажіть ім’я або назву користувача");
+  }
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+
+  try {
+    const sheet = getUsersSheet_();
+
+    if (findUserByEmail_(sheet, normalizedEmail)) {
+      throw new Error("Користувач із таким email уже існує");
+    }
+
+    const now = new Date();
+    const userId = nextUserId_(sheet);
+    const nextRow = sheet.getLastRow() + 1;
+
+    sheet
+      .getRange(nextRow, 1, 1, USER_HEADERS.length)
+      .setValues([[
+        userId,
+        normalizedEmail,
+        normalizedName,
+        normalizedRole,
+        normalizedActive,
+        now,
+        now,
+        "",
+        normalizedComment
+      ]]);
+
+    appendAuditLog_(
+      actor ? actor.email : "",
+      actor ? actor.userId : "",
+      actor ? actor.role : "",
+      "USER_CREATED",
+      "USER",
+      userId,
+      "SUCCESS",
+      {
+        email: normalizedEmail,
+        name: normalizedName,
+        role: normalizedRole,
+        active: normalizedActive
+      }
+    );
+
+    return {
+      success: true,
+      message: "Користувача додано",
+      user: serializeUser_(findUserById_(sheet, userId))
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+
+function updateUser(userId, email, name, role, comment) {
+  ensureBackendFoundation_();
+  const permission = requirePermission_(PERMISSIONS.USERS_MANAGE);
+  const actor = permission.user || getCurrentUser_();
+
+  const normalizedUserId = normalizeUserId_(userId);
+
+  if (!normalizedUserId) {
+    throw new Error("Некоректний UserID");
+  }
+
+  const normalizedEmail = validateUserEmail_(email);
+  const normalizedName = String(name || "").trim();
+  const normalizedRole = normalizeUserRole_(role);
+  const normalizedComment = String(comment || "").trim();
+
+  if (!normalizedName) {
+    throw new Error("Вкажіть ім’я або назву користувача");
+  }
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+
+  try {
+    const sheet = getUsersSheet_();
+    const existing = findUserById_(sheet, normalizedUserId);
+
+    if (!existing) {
+      throw new Error("Користувача не знайдено");
+    }
+
+    const duplicate = findUserByEmail_(sheet, normalizedEmail);
+
+    if (duplicate && duplicate.userId !== normalizedUserId) {
+      throw new Error("Користувач із таким email уже існує");
+    }
+
+    if (existing.email === BOOTSTRAP_ADMIN_EMAIL) {
+      if (normalizedEmail !== BOOTSTRAP_ADMIN_EMAIL) {
+        throw new Error("Не можна змінити email головного адміністратора");
+      }
+
+      if (normalizedRole !== "ADMIN") {
+        throw new Error("Не можна змінити роль головного адміністратора");
+      }
+    }
+
+    const now = new Date();
+    const previous = serializeUser_(existing);
+
+    sheet
+      .getRange(existing.row, 2, 1, 8)
+      .setValues([[
+        normalizedEmail,
+        normalizedName,
+        normalizedRole,
+        existing.active,
+        existing.createdAt || now,
+        now,
+        existing.lastLogin || "",
+        normalizedComment
+      ]]);
+
+    const updated = findUserById_(sheet, normalizedUserId);
+
+    appendAuditLog_(
+      actor ? actor.email : "",
+      actor ? actor.userId : "",
+      actor ? actor.role : "",
+      "USER_UPDATED",
+      "USER",
+      normalizedUserId,
+      "SUCCESS",
+      {
+        before: previous,
+        after: serializeUser_(updated)
+      }
+    );
+
+    return {
+      success: true,
+      message: "Користувача оновлено",
+      user: serializeUser_(updated)
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+
+function setUserActive(userId, active) {
+  ensureBackendFoundation_();
+  const permission = requirePermission_(PERMISSIONS.USERS_MANAGE);
+  const actor = permission.user || getCurrentUser_();
+
+  const normalizedUserId = normalizeUserId_(userId);
+
+  if (!normalizedUserId) {
+    throw new Error("Некоректний UserID");
+  }
+
+  const normalizedActive = normalizeBoolean_(active);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+
+  try {
+    const sheet = getUsersSheet_();
+    const existing = findUserById_(sheet, normalizedUserId);
+
+    if (!existing) {
+      throw new Error("Користувача не знайдено");
+    }
+
+    if (
+      existing.email === BOOTSTRAP_ADMIN_EMAIL &&
+      !normalizedActive
+    ) {
+      throw new Error("Не можна заблокувати головного адміністратора");
+    }
+
+    if (existing.active === normalizedActive) {
+      return {
+        success: true,
+        unchanged: true,
+        message: normalizedActive
+          ? "Користувач уже активний"
+          : "Користувач уже заблокований",
+        user: serializeUser_(existing)
+      };
+    }
+
+    const now = new Date();
+
+    sheet
+      .getRange(existing.row, 5)
+      .setValue(normalizedActive);
+
+    sheet
+      .getRange(existing.row, 7)
+      .setValue(now);
+
+    const updated = findUserById_(sheet, normalizedUserId);
+    const action = normalizedActive
+      ? "USER_ENABLED"
+      : "USER_DISABLED";
+
+    appendAuditLog_(
+      actor ? actor.email : "",
+      actor ? actor.userId : "",
+      actor ? actor.role : "",
+      action,
+      "USER",
+      normalizedUserId,
+      "SUCCESS",
+      {
+        email: existing.email
+      }
+    );
+
+    return {
+      success: true,
+      unchanged: false,
+      message: normalizedActive
+        ? "Користувача активовано"
+        : "Користувача заблоковано",
+      user: serializeUser_(updated)
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+
+function disableUser(userId) {
+  return setUserActive(userId, false);
+}
+
+
+function enableUser(userId) {
+  return setUserActive(userId, true);
+}
+
+
+function listAuditLog(limit) {
+  ensureBackendFoundation_();
+  requirePermission_(PERMISSIONS.AUDIT_VIEW);
+
+  const sheet = getAuditLogSheet_();
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow < 2) {
+    return [];
+  }
+
+  const requestedLimit = Math.max(
+    1,
+    Math.min(Number(limit) || 100, 500)
+  );
+
+  const rowCount = Math.min(lastRow - 1, requestedLimit);
+  const startRow = lastRow - rowCount + 1;
+  const values = sheet
+    .getRange(
+      startRow,
+      1,
+      rowCount,
+      AUDIT_LOG_HEADERS.length
+    )
+    .getValues();
+
+  return values
+    .reverse()
+    .map(function (row) {
+      return {
+        timestamp: formatDate_(row[0], "dd.MM.yyyy HH:mm:ss"),
+        email: normalizeUserEmail_(row[1]),
+        userId: String(row[2] || ""),
+        role: String(row[3] || "").trim().toUpperCase(),
+        action: String(row[4] || ""),
+        entityType: String(row[5] || ""),
+        entityId: String(row[6] || ""),
+        result: String(row[7] || "").trim().toUpperCase(),
+        details: parseLogDetails_(row[8])
+      };
+    });
+}
+
+
+function findUserById_(usersSheet, userId) {
+  const sheet = usersSheet || getUsersSheet_();
+  const normalizedUserId = normalizeUserId_(userId);
+
+  if (!normalizedUserId) {
+    return null;
+  }
+
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow < 2) {
+    return null;
+  }
+
+  const values = sheet
+    .getRange(2, 1, lastRow - 1, USER_HEADERS.length)
+    .getValues();
+
+  for (let index = 0; index < values.length; index++) {
+    const row = values[index];
+
+    if (normalizeUserId_(row[0]) === normalizedUserId) {
+      return userFromValues_(row, index + 2);
+    }
+  }
+
+  return null;
+}
+
+
+function userFromValues_(row, sheetRow) {
+  return {
+    row: sheetRow,
+    userId: normalizeUserId_(row[0]),
+    email: normalizeUserEmail_(row[1]),
+    name: String(row[2] || "").trim(),
+    role: String(row[3] || "").trim().toUpperCase(),
+    active: normalizeBoolean_(row[4]),
+    createdAt: row[5] || "",
+    updatedAt: row[6] || "",
+    lastLogin: row[7] || "",
+    comment: String(row[8] || "")
+  };
+}
+
+
+function serializeUser_(user) {
+  if (!user) {
+    return null;
+  }
+
+  return {
+    userId: String(user.userId || ""),
+    email: normalizeUserEmail_(user.email),
+    name: String(user.name || ""),
+    role: String(user.role || "").trim().toUpperCase(),
+    active: user.active !== false,
+    createdAt: formatDate_(user.createdAt, "dd.MM.yyyy HH:mm:ss"),
+    updatedAt: formatDate_(user.updatedAt, "dd.MM.yyyy HH:mm:ss"),
+    lastLogin: formatDate_(user.lastLogin, "dd.MM.yyyy HH:mm:ss"),
+    comment: String(user.comment || "")
+  };
+}
+
+
+function normalizeUserId_(userId) {
+  const normalized = String(userId || "")
+    .trim()
+    .toUpperCase();
+
+  return /^USR-\d{6}$/.test(normalized)
+    ? normalized
+    : "";
+}
+
+
+function validateUserEmail_(email) {
+  const normalizedEmail = normalizeUserEmail_(email);
+
+  if (!normalizedEmail) {
+    throw new Error("Вкажіть email користувача");
+  }
+
+  if (
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
+  ) {
+    throw new Error("Некоректний email користувача");
+  }
+
+  return normalizedEmail;
+}
+
+
+function parseLogDetails_(details) {
+  if (details === undefined || details === null || details === "") {
+    return null;
+  }
+
+  if (typeof details !== "string") {
+    return details;
+  }
+
+  try {
+    return JSON.parse(details);
+  } catch (error) {
+    return details;
   }
 }
 
@@ -3691,6 +4151,80 @@ function doGet(e) {
     const action = String(parameters.action || "").trim();
 
     ensureBackendFoundation_();
+
+
+    if (action === "listUsers") {
+      return jsonp_(callback, {
+        ok: true,
+        users: listUsers()
+      });
+    }
+
+    if (action === "getUser") {
+      return jsonp_(callback, {
+        ok: true,
+        user: getUser(
+          parameters.userId || parameters.email
+        )
+      });
+    }
+
+    if (action === "createUser") {
+      return jsonp_(callback, {
+        ok: true,
+        result: createUser(
+          parameters.email,
+          parameters.name,
+          parameters.role,
+          parameters.active,
+          parameters.comment
+        )
+      });
+    }
+
+    if (action === "updateUser") {
+      return jsonp_(callback, {
+        ok: true,
+        result: updateUser(
+          parameters.userId,
+          parameters.email,
+          parameters.name,
+          parameters.role,
+          parameters.comment
+        )
+      });
+    }
+
+    if (action === "setUserActive") {
+      return jsonp_(callback, {
+        ok: true,
+        result: setUserActive(
+          parameters.userId,
+          parameters.active
+        )
+      });
+    }
+
+    if (action === "disableUser") {
+      return jsonp_(callback, {
+        ok: true,
+        result: disableUser(parameters.userId)
+      });
+    }
+
+    if (action === "enableUser") {
+      return jsonp_(callback, {
+        ok: true,
+        result: enableUser(parameters.userId)
+      });
+    }
+
+    if (action === "listAuditLog") {
+      return jsonp_(callback, {
+        ok: true,
+        auditLog: listAuditLog(parameters.limit)
+      });
+    }
 
     if (action === "healthCheck") {
       return jsonp_(callback, {
