@@ -1,3 +1,5 @@
+
+Code · JS
 const AIRCRAFT_SHEET = "Aircraft";
 const HISTORY_SHEET = "History";
 const STARLINKS_SHEET = "Starlinks";
@@ -4577,6 +4579,57 @@ function doGet(e) {
       "getCurrentSession"
     ];
 
+    // Дії, які вже мають власну перевірку requirePermission_ всередині
+    // своєї функції (Users/AuditLog) — тут навмисно НЕ дублюємо перевірку,
+    // щоб уникнути подвійного запису в AuditLog при відмові.
+    const SELF_CHECKED_ACTIONS = [
+      "listUsers",
+      "getUser",
+      "createUser",
+      "updateUser",
+      "setUserActive",
+      "disableUser",
+      "enableUser",
+      "listAuditLog"
+    ];
+
+    const ACTION_PERMISSIONS = {
+      dashboard: PERMISSIONS.DASHBOARD_VIEW,
+
+      listAircraftByStatus: PERMISSIONS.AIRCRAFT_VIEW,
+      get: PERMISSIONS.AIRCRAFT_VIEW,
+      searchAircraft: PERMISSIONS.AIRCRAFT_VIEW,
+      nextAircraftId: PERMISSIONS.AIRCRAFT_VIEW,
+      createAircraft: PERMISSIONS.AIRCRAFT_CREATE,
+      update: PERMISSIONS.AIRCRAFT_STATUS_CHANGE,
+      updateDetails: PERMISSIONS.AIRCRAFT_EDIT,
+
+      listStarlinksByStatus: PERMISSIONS.STARLINK_VIEW,
+      starlinks: PERMISSIONS.STARLINK_VIEW,
+      getStarlink: PERMISSIONS.STARLINK_VIEW,
+      searchStarlinks: PERMISSIONS.STARLINK_VIEW,
+      nextStarlinkId: PERMISSIONS.STARLINK_VIEW,
+      createStarlink: PERMISSIONS.STARLINK_CREATE,
+      assignStarlink: PERMISSIONS.STARLINK_ASSIGN,
+
+      createBatch: PERMISSIONS.BATCH_CREATE,
+
+      getQrQueue: PERMISSIONS.QR_VIEW,
+      getPrintSettings: PERMISSIONS.QR_VIEW,
+      getPrintTemplates: PERMISSIONS.QR_VIEW,
+      qrStatus: PERMISSIONS.QR_VIEW,
+      markQrPrinted: PERMISSIONS.QR_PRINT,
+      syncQrQueue: PERMISSIONS.QR_PRINT,
+      requeueQr: PERMISSIONS.QR_PRINT,
+
+      history: PERMISSIONS.HISTORY_VIEW,
+
+      listBackups: PERMISSIONS.BACKUP_VIEW,
+      createBackup: PERMISSIONS.BACKUP_CREATE,
+
+      healthCheck: PERMISSIONS.DIAGNOSTICS_VIEW
+    };
+
     CURRENT_SESSION_USER_ = null;
 
     if (AUTH_EXEMPT_ACTIONS.indexOf(action) === -1) {
@@ -4586,6 +4639,13 @@ function doGet(e) {
         getUsersSheet_(),
         session.email
       );
+
+      if (
+        SELF_CHECKED_ACTIONS.indexOf(action) === -1 &&
+        ACTION_PERMISSIONS[action]
+      ) {
+        requirePermission_(ACTION_PERMISSIONS[action]);
+      }
     }
 
 
@@ -5369,3 +5429,17 @@ function sanitizeCallback_(callback) {
 
   return "callback";
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
