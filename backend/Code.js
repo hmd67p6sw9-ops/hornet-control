@@ -1463,6 +1463,36 @@ function nextBackupId_() {
 }
 
 
+const HEADER_ALIASES = {
+  Status: ["Status", "Статус"],
+  Starlink: ["Starlink", "STARLINK"],
+  SerialNumber: ["SerialNumber", "Серійний номер"],
+  ReceivedDate: ["ReceivedDate", "Дата отримання"],
+  LastChange: ["LastChange", "Остання зміна"],
+  Comment: ["Comment", "Коментар"],
+  Timestamp: ["Timestamp", "Час"],
+  OldStatus: ["OldStatus", "Старий статус"],
+  NewStatus: ["NewStatus", "Новий статус"]
+};
+
+
+function normalizeHeaderText_(value) {
+  return String(value || "")
+    .replace(/[\u00A0\u200B\u200C\u200D\uFEFF]/g, " ")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+}
+
+
+function isHeaderMatch_(expectedHeader, actualHeader) {
+  const allowedValues = HEADER_ALIASES[expectedHeader] || [expectedHeader];
+  const normalizedActual = normalizeHeaderText_(actualHeader);
+
+  return allowedValues.some(function (allowedValue) {
+    return normalizeHeaderText_(allowedValue) === normalizedActual;
+  });
+}
 function healthCheck() {
   ensureBackendFoundation_();
 
@@ -1590,7 +1620,7 @@ function healthCheck() {
     const mismatches = [];
 
     definition.headers.forEach(function (expectedHeader, index) {
-      if (currentHeaders[index] !== expectedHeader) {
+      if (!isHeaderMatch_(expectedHeader, currentHeaders[index])) {
         mismatches.push({
           column: index + 1,
           expected: expectedHeader,
