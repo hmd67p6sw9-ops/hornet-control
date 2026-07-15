@@ -82,24 +82,20 @@ self.addEventListener("fetch", function (event) {
   }
 
   event.respondWith(
-    caches.match(request).then(function (cachedResponse) {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+    fetch(request, { cache: "no-store" })
+      .then(function (networkResponse) {
+        if (networkResponse && networkResponse.status === 200) {
+          const copy = networkResponse.clone();
 
-      return fetch(request).then(function (networkResponse) {
-        if (!networkResponse || networkResponse.status !== 200) {
-          return networkResponse;
+          caches.open(CACHE_NAME).then(function (cache) {
+            cache.put(request, copy);
+          });
         }
 
-        const copy = networkResponse.clone();
-
-        caches.open(CACHE_NAME).then(function (cache) {
-          cache.put(request, copy);
-        });
-
         return networkResponse;
-      });
-    })
+      })
+      .catch(function () {
+        return caches.match(request);
+      })
   );
 });
