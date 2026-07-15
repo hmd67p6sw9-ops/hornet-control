@@ -1,27 +1,26 @@
-Hornet Control v1.6.1-alpha2 — Users API
+Hornet Control v1.6.1-alpha3.1.1 — HealthCheck Headers
 
-Додано:
-- listUsers
-- getUser
-- createUser
-- updateUser
-- setUserActive
-- disableUser
-- enableUser
-- listAuditLog
-- валідацію email, ролі та UserID
-- захист bootstrap-адміністратора
-- аудит створення, редагування, активації та блокування користувачів
+Виправлено:
+- хибні HEADER_MISMATCH для Aircraft;
+- хибні HEADER_MISMATCH для History;
+- хибні HEADER_MISMATCH для Starlinks;
+- підтримку українських та англійських назв заголовків;
+- нечутливість діагностики до регістру, пробілів і символів-розділювачів.
 
-Режим безпеки:
-SECURITY_ENFORCEMENT_ENABLED залишається false.
-Поточний функціонал не блокується.
+Не змінюється:
+- структура Google Sheets;
+- дані;
+- Sessions;
+- авторизація;
+- бізнес-API;
+- SECURITY_ENFORCEMENT_ENABLED = false.
 
-Встановлення через clasp:
-1. Замінити backend/Code.js цим файлом.
-2. У Terminal виконати: clasp push
-3. В Apps Script створити нову версію deployment.
-4. Перевірити існуючий функціонал.
+Встановлення:
+1. Замінити backend/Code.js.
+2. Виконати clasp push.
+3. Створити нову версію deployment.
+4. Примусово оновити PWA.
+5. Запустити Діагностику системи.
 
 Назва Deployment:
-Hornet Control v1.6.1-alpha2 Users API
+Hornet Control v1.6.1-alpha3.1.1 HealthCheck Headers
