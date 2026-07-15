@@ -373,64 +373,61 @@ function ensureAircraftBatchColumn_(sheet) {
 
 
 function getBatchesSheet_(spreadsheet) {
-  const book = spreadsheet || SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = book.getSheetByName(BATCHES_SHEET);
-
-  if (!sheet) {
-    sheet = book.insertSheet(BATCHES_SHEET);
-  }
-
-  if (sheet.getLastRow() === 0) {
-    sheet
-      .getRange(1, 1, 1, BATCH_HEADERS.length)
-      .setValues([BATCH_HEADERS]);
-
-    return sheet;
-  }
-
-  const currentHeaders = sheet
-    .getRange(1, 1, 1, BATCH_HEADERS.length)
-    .getValues()[0];
-
-  const headerRowIsEmpty = currentHeaders.every(function (value) {
-    return !String(value || "").trim();
-  });
-
-  if (headerRowIsEmpty) {
-    sheet
-      .getRange(1, 1, 1, BATCH_HEADERS.length)
-      .setValues([BATCH_HEADERS]);
-  }
-
-  return sheet;
+  return getOrCreateSheetSafe_(
+    spreadsheet,
+    BATCHES_SHEET,
+    BATCH_HEADERS
+  ).sheet;
 }
 
 
 function getSystemLogSheet_(spreadsheet) {
-  const book = spreadsheet || SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = book.getSheetByName(SYSTEM_LOG_SHEET);
-
-  if (!sheet) {
-    sheet = book.insertSheet(SYSTEM_LOG_SHEET);
-  }
-
-  ensureHeaderRow_(sheet, SYSTEM_LOG_HEADERS);
-
-  return sheet;
+  return getOrCreateSheetSafe_(
+    spreadsheet,
+    SYSTEM_LOG_SHEET,
+    SYSTEM_LOG_HEADERS
+  ).sheet;
 }
 
 
 function getBackupsSheet_(spreadsheet) {
+  return getOrCreateSheetSafe_(
+    spreadsheet,
+    BACKUPS_SHEET,
+    BACKUP_HEADERS
+  ).sheet;
+}
+
+
+function getOrCreateSheetSafe_(spreadsheet, sheetName, headers) {
   const book = spreadsheet || SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = book.getSheetByName(BACKUPS_SHEET);
+  let sheet = book.getSheetByName(sheetName);
+  let created = false;
 
   if (!sheet) {
-    sheet = book.insertSheet(BACKUPS_SHEET);
+    const lock = LockService.getScriptLock();
+    lock.waitLock(30000);
+
+    try {
+      // Подвійна перевірка: поки ми чекали на блокування, паралельний
+      // запит міг уже створити цей аркуш — тоді просто використовуємо його.
+      sheet = book.getSheetByName(sheetName);
+
+      if (!sheet) {
+        sheet = book.insertSheet(sheetName);
+        created = true;
+      }
+    } finally {
+      lock.releaseLock();
+    }
   }
 
-  ensureHeaderRow_(sheet, BACKUP_HEADERS);
+  ensureHeaderRow_(sheet, headers);
 
-  return sheet;
+  return {
+    sheet: sheet,
+    created: created
+  };
 }
 
 
@@ -551,20 +548,7 @@ function getSessionsSheet_(spreadsheet) {
 
 
 function getOrCreateSecuritySheet_(spreadsheet, sheetName, headers) {
-  let sheet = spreadsheet.getSheetByName(sheetName);
-  let created = false;
-
-  if (!sheet) {
-    sheet = spreadsheet.insertSheet(sheetName);
-    created = true;
-  }
-
-  ensureHeaderRow_(sheet, headers);
-
-  return {
-    sheet: sheet,
-    created: created
-  };
+  return getOrCreateSheetSafe_(spreadsheet, sheetName, headers);
 }
 
 
