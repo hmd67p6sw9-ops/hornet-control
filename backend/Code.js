@@ -1007,8 +1007,16 @@ function normalizePermission_(permission) {
 }
 
 
+let CURRENT_SESSION_USER_ = null;
+
+
 function getCurrentUser_(email) {
   const requestedEmail = normalizeUserEmail_(email);
+
+  if (!requestedEmail && CURRENT_SESSION_USER_) {
+    return CURRENT_SESSION_USER_;
+  }
+
   let resolvedEmail = requestedEmail;
 
   if (!resolvedEmail) {
@@ -4561,6 +4569,24 @@ function doGet(e) {
     const action = String(parameters.action || "").trim();
 
     ensureBackendFoundation_();
+
+    const AUTH_EXEMPT_ACTIONS = [
+      "listLoginableUsers",
+      "login",
+      "logout",
+      "getCurrentSession"
+    ];
+
+    CURRENT_SESSION_USER_ = null;
+
+    if (AUTH_EXEMPT_ACTIONS.indexOf(action) === -1) {
+      const session = requireAuth_(parameters.token);
+
+      CURRENT_SESSION_USER_ = findUserByEmail_(
+        getUsersSheet_(),
+        session.email
+      );
+    }
 
 
     if (action === "listLoginableUsers") {

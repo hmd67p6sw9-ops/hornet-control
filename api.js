@@ -58,6 +58,14 @@ window.addEventListener("DOMContentLoaded", function () {
   }
 });
 
+function isSessionInvalidError_(response) {
+  const message = String((response && response.error) || "");
+  return (
+    message.indexOf("Сесія недійсна") !== -1 ||
+    message.indexOf("Сесію не знайдено") !== -1
+  );
+}
+
 function apiRequest(parameters, callback) {
   if (!navigator.onLine) {
     updateConnectionStatus();
@@ -98,6 +106,21 @@ function apiRequest(parameters, callback) {
     completed = true;
     clearTimeout(timeoutId);
     cleanup();
+
+    if (
+      response &&
+      response.ok === false &&
+      isSessionInvalidError_(response) &&
+      parameters.action !== "getCurrentSession" &&
+      parameters.action !== "login"
+    ) {
+      setStoredSessionToken("");
+
+      if (typeof showLoginScreen === "function") {
+        showLoginScreen();
+        loadLoginableUsers();
+      }
+    }
 
     callback(response);
   }
