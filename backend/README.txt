@@ -1,27 +1,33 @@
-Hornet Control v1.6.1-alpha2 — Users API
+Hornet Control v1.6.1-alpha3 — Session Foundation
 
 Додано:
-- listUsers
-- getUser
-- createUser
-- updateUser
-- setUserActive
-- disableUser
-- enableUser
-- listAuditLog
-- валідацію email, ролі та UserID
-- захист bootstrap-адміністратора
-- аудит створення, редагування, активації та блокування користувачів
+- аркуш Sessions;
+- login(email, clientInfo);
+- logout(sessionToken);
+- getCurrentSession(sessionToken);
+- requireAuth_(sessionToken);
+- TTL сесії 12 годин;
+- SHA-256 хешування токенів;
+- завершення прострочених сесій;
+- перевірка Active та Role через Users;
+- оновлення LastLogin;
+- AuditLog для входу, виходу, завершення та відкликання сесій;
+- API-маршрути login, logout, getCurrentSession;
+- перевірка Sessions у healthCheck.
 
-Режим безпеки:
-SECURITY_ENFORCEMENT_ENABLED залишається false.
-Поточний функціонал не блокується.
+Не змінено:
+- SECURITY_ENFORCEMENT_ENABLED = false;
+- існуючий frontend;
+- бізнес-API;
+- Users UI;
+- Google Sign-In.
 
-Встановлення через clasp:
-1. Замінити backend/Code.js цим файлом.
-2. У Terminal виконати: clasp push
-3. В Apps Script створити нову версію deployment.
-4. Перевірити існуючий функціонал.
+Встановлення:
+1. Замінити backend/Code.js.
+2. Виконати clasp push.
+3. Створити нову версію Web App deployment.
+4. Відкрити застосунок або запустити healthCheck.
+5. Перевірити появу аркуша Sessions.
 
 Назва Deployment:
-Hornet Control v1.6.1-alpha2 Users API
+Hornet Control v1.6.1-alpha3 Session Foundation

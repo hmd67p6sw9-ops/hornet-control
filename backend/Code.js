@@ -9,8 +9,10 @@ const SYSTEM_LOG_SHEET = "SystemLog";
 const BACKUPS_SHEET = "Backups";
 const USERS_SHEET = "Users";
 const AUDIT_LOG_SHEET = "AuditLog";
+const SESSIONS_SHEET = "Sessions";
 const BACKUP_FOLDER_NAME = "Hornet Control Backups";
 const BOOTSTRAP_ADMIN_EMAIL = "asghornetcontrol@gmail.com";
+const SESSION_TTL_HOURS = 12;
 
 const API_KEY = "HC_7YkP9vLm42QaX8Nr5DzB1UcEe96MwFs";
 
@@ -188,6 +190,22 @@ const AUDIT_LOG_HEADERS = [
   "EntityID",
   "Result",
   "Details"
+];
+
+
+const SESSION_HEADERS = [
+  "SessionID",
+  "TokenHash",
+  "UserID",
+  "Email",
+  "Role",
+  "CreatedAt",
+  "ExpiresAt",
+  "LastActivity",
+  "Revoked",
+  "RevokedAt",
+  "ClientInfo",
+  "Version"
 ];
 
 
@@ -444,8 +462,17 @@ function ensureSecurityFoundation_(spreadsheet) {
     AUDIT_LOG_SHEET,
     AUDIT_LOG_HEADERS
   );
+  const sessionsResult = getOrCreateSecuritySheet_(
+    book,
+    SESSIONS_SHEET,
+    SESSION_HEADERS
+  );
 
-  if (usersResult.created || auditResult.created) {
+  if (
+    usersResult.created ||
+    auditResult.created ||
+    sessionsResult.created
+  ) {
     appendAuditLog_(
       "",
       "",
@@ -456,7 +483,8 @@ function ensureSecurityFoundation_(spreadsheet) {
       "SUCCESS",
       {
         usersSheetCreated: usersResult.created,
-        auditLogSheetCreated: auditResult.created
+        auditLogSheetCreated: auditResult.created,
+        sessionsSheetCreated: sessionsResult.created
       }
     );
   }
@@ -501,6 +529,17 @@ function getAuditLogSheet_(spreadsheet) {
     book,
     AUDIT_LOG_SHEET,
     AUDIT_LOG_HEADERS
+  ).sheet;
+}
+
+
+function getSessionsSheet_(spreadsheet) {
+  const book = spreadsheet || SpreadsheetApp.getActiveSpreadsheet();
+
+  return getOrCreateSecuritySheet_(
+    book,
+    SESSIONS_SHEET,
+    SESSION_HEADERS
   ).sheet;
 }
 
@@ -1313,6 +1352,466 @@ function parseLogDetails_(details) {
 
 
 /* =========================
+   SESSION & AUTH FOUNDATION v1.6.1-alpha3
+   ========================= */
+
+function login(email, clientInfo) {
+  ensureBackendFoundation_();
+
+  const normalizedEmail = validateUserEmail_(email);
+  const usersSheet = getUsersSheet_();
+  const user = findUserByEmail_(usersSheet, normalizedEmail);
+
+  if (!user) {
+    appendAuditLog_(
+      normalizedEmail,
+      "",
+      "",
+      "LOGIN_DENIED",
+      "SESSION",
+      "",
+      "DENIED",
+      {
+        reason: "USER_NOT_FOUND"
+      }
+    );
+
+    throw new Error("Користувача немає у білому списку");
+  }
+
+  if (!user.active) {
+    appendAuditLog_(
+      user.email,
+      user.userId,
+      user.role,
+      "LOGIN_DENIED",
+      "SESSION",
+      "",
+      "DENIED",
+      {
+        reason: "USER_DISABLED"
+      }
+    );
+
+    throw new Error("Доступ користувача заблоковано");
+  }
+
+  const lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+
+  try {
+    cleanupExpiredSessions_();
+
+    const now = new Date();
+    const expiresAt = new Date(
+      now.getTime() + SESSION_TTL_HOURS * 60 * 60 * 1000
+    );
+    const sessionId = "SES-" + Utilities.getUuid().toUpperCase();
+    const sessionToken = generateSessionToken_();
+    const tokenHash = hashSessionToken_(sessionToken);
+    const safeClientInfo = sanitizeClientInfo_(clientInfo);
+    const sessionsSheet = getSessionsSheet_();
+    const nextRow = sessionsSheet.getLastRow() + 1;
+
+    sessionsSheet
+      .getRange(nextRow, 1, 1, SESSION_HEADERS.length)
+      .setValues([[
+        sessionId,
+        tokenHash,
+        user.userId,
+        user.email,
+        user.role,
+        now,
+        expiresAt,
+        now,
+        false,
+        "",
+        safeClientInfo,
+        "1"
+      ]]);
+
+    usersSheet
+      .getRange(user.row, 8)
+      .setValue(now);
+
+    usersSheet
+      .getRange(user.row, 7)
+      .setValue(now);
+
+    appendAuditLog_(
+      user.email,
+      user.userId,
+      user.role,
+      "LOGIN_SUCCESS",
+      "SESSION",
+      sessionId,
+      "SUCCESS",
+      {
+        expiresAt: formatDate_(expiresAt, "dd.MM.yyyy HH:mm:ss"),
+        clientInfo: safeClientInfo
+      }
+    );
+
+    return {
+      success: true,
+      token: sessionToken,
+      session: {
+        sessionId: sessionId,
+        createdAt: formatDate_(now, "dd.MM.yyyy HH:mm:ss"),
+        expiresAt: formatDate_(expiresAt, "dd.MM.yyyy HH:mm:ss")
+      },
+      user: serializeUser_(
+        findUserById_(usersSheet, user.userId)
+      )
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+
+function logout(sessionToken) {
+  ensureBackendFoundation_();
+
+  const session = findSessionByToken_(sessionToken);
+
+  if (!session || session.revoked) {
+    return {
+      success: true,
+      unchanged: true,
+      message: "Сесію вже завершено"
+    };
+  }
+
+  revokeSession_(session);
+
+  appendAuditLog_(
+    session.email,
+    session.userId,
+    session.role,
+    "LOGOUT",
+    "SESSION",
+    session.sessionId,
+    "SUCCESS",
+    {}
+  );
+
+  return {
+    success: true,
+    unchanged: false,
+    message: "Вихід виконано"
+  };
+}
+
+
+function getCurrentSession(sessionToken) {
+  ensureBackendFoundation_();
+
+  const session = requireAuth_(sessionToken);
+  const user = findUserById_(getUsersSheet_(), session.userId);
+
+  return {
+    authenticated: true,
+    session: serializeSession_(session),
+    user: serializeUser_(user)
+  };
+}
+
+
+function requireAuth_(sessionToken) {
+  const token = String(sessionToken || "").trim();
+
+  if (!token) {
+    throw new Error("Потрібна авторизація");
+  }
+
+  const session = findSessionByToken_(token);
+
+  if (!session) {
+    throw new Error("Сесію не знайдено");
+  }
+
+  if (session.revoked) {
+    throw new Error("Сесію завершено");
+  }
+
+  const now = new Date();
+  const expiresAt = toDate_(session.expiresAt);
+
+  if (!expiresAt || expiresAt.getTime() <= now.getTime()) {
+    revokeSession_(session);
+
+    appendAuditLog_(
+      session.email,
+      session.userId,
+      session.role,
+      "SESSION_EXPIRED",
+      "SESSION",
+      session.sessionId,
+      "DENIED",
+      {}
+    );
+
+    throw new Error("Термін дії сесії завершився");
+  }
+
+  const user = findUserById_(getUsersSheet_(), session.userId);
+
+  if (!user || !user.active) {
+    revokeSession_(session);
+
+    appendAuditLog_(
+      session.email,
+      session.userId,
+      session.role,
+      "SESSION_REVOKED",
+      "SESSION",
+      session.sessionId,
+      "DENIED",
+      {
+        reason: user ? "USER_DISABLED" : "USER_NOT_FOUND"
+      }
+    );
+
+    throw new Error("Доступ користувача заблоковано");
+  }
+
+  if (String(user.role || "") !== String(session.role || "")) {
+    revokeSession_(session);
+
+    appendAuditLog_(
+      session.email,
+      session.userId,
+      session.role,
+      "SESSION_REVOKED",
+      "SESSION",
+      session.sessionId,
+      "DENIED",
+      {
+        reason: "ROLE_CHANGED"
+      }
+    );
+
+    throw new Error("Роль користувача змінилась. Увійдіть повторно");
+  }
+
+  const sessionsSheet = getSessionsSheet_();
+
+  sessionsSheet
+    .getRange(session.row, 8)
+    .setValue(now);
+
+  session.lastActivity = now;
+
+  return session;
+}
+
+
+function cleanupExpiredSessions_() {
+  const sheet = getSessionsSheet_();
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow < 2) {
+    return 0;
+  }
+
+  const values = sheet
+    .getRange(2, 1, lastRow - 1, SESSION_HEADERS.length)
+    .getValues();
+
+  const now = new Date();
+  let cleaned = 0;
+
+  values.forEach(function (row, index) {
+    const session = sessionFromValues_(row, index + 2);
+
+    if (session.revoked) {
+      return;
+    }
+
+    const expiresAt = toDate_(session.expiresAt);
+
+    if (expiresAt && expiresAt.getTime() <= now.getTime()) {
+      sheet
+        .getRange(session.row, 9)
+        .setValue(true);
+
+      sheet
+        .getRange(session.row, 10)
+        .setValue(now);
+
+      cleaned++;
+    }
+  });
+
+  return cleaned;
+}
+
+
+function findSessionByToken_(sessionToken) {
+  const token = String(sessionToken || "").trim();
+
+  if (!token) {
+    return null;
+  }
+
+  const tokenHash = hashSessionToken_(token);
+  const sheet = getSessionsSheet_();
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow < 2) {
+    return null;
+  }
+
+  const values = sheet
+    .getRange(2, 1, lastRow - 1, SESSION_HEADERS.length)
+    .getValues();
+
+  for (let index = 0; index < values.length; index++) {
+    const row = values[index];
+
+    if (String(row[1] || "") === tokenHash) {
+      return sessionFromValues_(row, index + 2);
+    }
+  }
+
+  return null;
+}
+
+
+function revokeSession_(session) {
+  if (!session || !session.row || session.revoked) {
+    return;
+  }
+
+  const sheet = getSessionsSheet_();
+  const now = new Date();
+
+  sheet
+    .getRange(session.row, 9)
+    .setValue(true);
+
+  sheet
+    .getRange(session.row, 10)
+    .setValue(now);
+
+  session.revoked = true;
+  session.revokedAt = now;
+}
+
+
+function sessionFromValues_(row, sheetRow) {
+  return {
+    row: sheetRow,
+    sessionId: String(row[0] || ""),
+    tokenHash: String(row[1] || ""),
+    userId: normalizeUserId_(row[2]),
+    email: normalizeUserEmail_(row[3]),
+    role: String(row[4] || "").trim().toUpperCase(),
+    createdAt: row[5] || "",
+    expiresAt: row[6] || "",
+    lastActivity: row[7] || "",
+    revoked: normalizeBoolean_(row[8]),
+    revokedAt: row[9] || "",
+    clientInfo: String(row[10] || ""),
+    version: String(row[11] || "1")
+  };
+}
+
+
+function serializeSession_(session) {
+  return {
+    sessionId: String(session.sessionId || ""),
+    userId: String(session.userId || ""),
+    email: normalizeUserEmail_(session.email),
+    role: String(session.role || "").trim().toUpperCase(),
+    createdAt: formatDate_(
+      session.createdAt,
+      "dd.MM.yyyy HH:mm:ss"
+    ),
+    expiresAt: formatDate_(
+      session.expiresAt,
+      "dd.MM.yyyy HH:mm:ss"
+    ),
+    lastActivity: formatDate_(
+      session.lastActivity,
+      "dd.MM.yyyy HH:mm:ss"
+    ),
+    revoked: session.revoked === true,
+    revokedAt: formatDate_(
+      session.revokedAt,
+      "dd.MM.yyyy HH:mm:ss"
+    ),
+    clientInfo: String(session.clientInfo || ""),
+    version: String(session.version || "1")
+  };
+}
+
+
+function generateSessionToken_() {
+  const source =
+    Utilities.getUuid() +
+    "|" +
+    Utilities.getUuid() +
+    "|" +
+    new Date().getTime() +
+    "|" +
+    Math.random();
+
+  return (
+    "HCST_" +
+    Utilities
+      .base64EncodeWebSafe(
+        Utilities.computeDigest(
+          Utilities.DigestAlgorithm.SHA_256,
+          source
+        )
+      )
+      .replace(/=+$/g, "")
+  );
+}
+
+
+function hashSessionToken_(token) {
+  const digest = Utilities.computeDigest(
+    Utilities.DigestAlgorithm.SHA_256,
+    String(token || "")
+  );
+
+  return digest
+    .map(function (byte) {
+      const normalized = byte < 0 ? byte + 256 : byte;
+
+      return normalized
+        .toString(16)
+        .padStart(2, "0");
+    })
+    .join("");
+}
+
+
+function sanitizeClientInfo_(clientInfo) {
+  return String(clientInfo || "")
+    .replace(/[\r\n\t]+/g, " ")
+    .trim()
+    .slice(0, 500);
+}
+
+
+function toDate_(value) {
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return value;
+  }
+
+  const parsed = new Date(value);
+
+  return isNaN(parsed.getTime())
+    ? null
+    : parsed;
+}
+
+
+/* =========================
    BACKUP & RECOVERY v1.6.0-alpha2
    ========================= */
 
@@ -1562,6 +2061,10 @@ function healthCheck() {
     {
       name: AUDIT_LOG_SHEET,
       headers: AUDIT_LOG_HEADERS
+    },
+    {
+      name: SESSIONS_SHEET,
+      headers: SESSION_HEADERS
     }
   ];
 
@@ -4152,6 +4655,33 @@ function doGet(e) {
 
     ensureBackendFoundation_();
 
+
+
+    if (action === "login") {
+      return jsonp_(callback, {
+        ok: true,
+        result: login(
+          parameters.email,
+          parameters.clientInfo
+        )
+      });
+    }
+
+    if (action === "logout") {
+      return jsonp_(callback, {
+        ok: true,
+        result: logout(parameters.sessionToken)
+      });
+    }
+
+    if (action === "getCurrentSession") {
+      return jsonp_(callback, {
+        ok: true,
+        result: getCurrentSession(
+          parameters.sessionToken
+        )
+      });
+    }
 
     if (action === "listUsers") {
       return jsonp_(callback, {
