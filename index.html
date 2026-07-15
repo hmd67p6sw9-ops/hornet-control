@@ -26,6 +26,24 @@
   </head>
 
   <body>
+    <div id="loginScreen" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Вхід — Hornet Control</h3>
+
+        <label class="form-label" for="loginEmailSelect">Користувач</label>
+        <select id="loginEmailSelect" class="form-input">
+          <option value="">Завантаження…</option>
+        </select>
+
+        <div id="loginMessage" class="message hidden"></div>
+
+        <button id="loginButton" class="primary" onclick="submitLogin()" disabled>
+          Увійти
+        </button>
+      </div>
+    </div>
+
+    <div id="appRoot" class="hidden">
     <div class="container">
       <div class="topbar">
         <div class="topbar-title">Hornet Control v1.6.1-alpha2</div>
@@ -472,6 +490,10 @@
 
           <button class="secondary" onclick="openBackupsModal()">
             Резервні копії
+          </button>
+
+          <button class="danger" onclick="performLogout()">
+            Вийти
           </button>
 
           <button class="secondary" onclick="closeAdminMenu()">
@@ -1010,9 +1032,12 @@
         <button class="secondary" onclick="closeEditModal()">Скасувати</button>
       </div>
     </div>
+    </div>
+
     <script src="utils.js"></script>
     <script src="ui.js"></script>
     <script src="api.js"></script>
+    <script src="login.js"></script>
     <script src="scanner.js"></script>
     <script src="aircraft.js"></script>
     <script src="starlink.js"></script>

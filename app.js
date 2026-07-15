@@ -26,7 +26,7 @@ function initializeApplication() {
   refreshQrQueueCount();
 }
 
-window.addEventListener("load", initializeApplication);
+window.addEventListener("load", checkSessionAndInit);
 
 if ("serviceWorker" in navigator) {
   window.addEventListener(

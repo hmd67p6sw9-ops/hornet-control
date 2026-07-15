@@ -109,6 +109,7 @@ function apiRequest(parameters, callback) {
   const query = new URLSearchParams({
     ...parameters,
     key: API_KEY,
+    token: getStoredSessionToken(),
     callback: callbackName,
     _: Date.now().toString()
   });
