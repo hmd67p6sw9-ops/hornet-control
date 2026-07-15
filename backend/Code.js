@@ -1,5 +1,5 @@
 
-Code · JS
+
 const AIRCRAFT_SHEET = "Aircraft";
 const HISTORY_SHEET = "History";
 const STARLINKS_SHEET = "Starlinks";
@@ -107,7 +107,7 @@ const USER_ROLES = [
   "COMBAT"
 ];
 
-const SECURITY_ENFORCEMENT_ENABLED = false;
+const SECURITY_ENFORCEMENT_ENABLED = true;
 
 const PERMISSIONS = {
   DASHBOARD_VIEW: "DASHBOARD_VIEW",
