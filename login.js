@@ -116,13 +116,20 @@ function loadLoginableUsers() {
 
 function submitLogin() {
   const select = document.getElementById("loginEmailSelect");
+  const pinInput = document.getElementById("loginPinInput");
   const button = document.getElementById("loginButton");
   const email = select.value;
+  const pin = pinInput.value.trim();
 
   hideGenericMessage("loginMessage");
 
   if (!email) {
     showGenericMessage("loginMessage", "Обери користувача зі списку", "error");
+    return;
+  }
+
+  if (!/^\d{4,6}$/.test(pin)) {
+    showGenericMessage("loginMessage", "Введи PIN (4–6 цифр)", "error");
     return;
   }
 
@@ -132,12 +139,14 @@ function submitLogin() {
     {
       action: "login",
       email: email,
+      pin: pin,
       clientInfo: navigator.userAgent
     },
     function (response) {
       button.disabled = false;
 
       if (!response.ok || !response.session) {
+        pinInput.value = "";
         showGenericMessage(
           "loginMessage",
           response.error || "Не вдалося увійти",

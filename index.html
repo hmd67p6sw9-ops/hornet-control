@@ -35,6 +35,18 @@
           <option value="">Завантаження…</option>
         </select>
 
+        <label class="form-label" for="loginPinInput">PIN</label>
+        <input
+          id="loginPinInput"
+          class="form-input"
+          type="password"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          maxlength="6"
+          autocomplete="off"
+          placeholder="••••"
+        />
+
         <div id="loginMessage" class="message hidden"></div>
 
         <button id="loginButton" class="primary" onclick="submitLogin()" disabled>
