@@ -1,5 +1,3 @@
-
-
 const AIRCRAFT_SHEET = "Aircraft";
 const HISTORY_SHEET = "History";
 const STARLINKS_SHEET = "Starlinks";
@@ -177,7 +175,8 @@ const USER_HEADERS = [
   "CreatedAt",
   "UpdatedAt",
   "LastLogin",
-  "Comment"
+  "Comment",
+  "PinHash"
 ];
 
 const AUDIT_LOG_HEADERS = [
@@ -259,7 +258,7 @@ function onEdit(e) {
    BACKEND FOUNDATION v1.5.0-alpha1
    ========================= */
 
-const BACKEND_FOUNDATION_VERSION = "1.6.1-alpha3.3";
+const BACKEND_FOUNDATION_VERSION = "1.6.1-alpha3.4";
 const FOUNDATION_CHECK_PROPERTY = "BACKEND_FOUNDATION_VERSION_ENSURED";
 const FOUNDATION_CHECK_TIMESTAMP_PROPERTY = "BACKEND_FOUNDATION_CHECKED_AT";
 const FOUNDATION_CHECK_TTL_MS = 5 * 60 * 1000; // 5 хвилин — запобіжник, навіть якщо забудеш підняти версію
@@ -499,6 +498,27 @@ function stringifyLogDetails_(details) {
    SECURITY FOUNDATION v1.6.1-alpha1
    ========================= */
 
+function ensureUsersPinColumn_(sheet) {
+  const lastColumn = Math.max(sheet.getLastColumn(), USER_HEADERS.length);
+  const headers = sheet
+    .getRange(1, 1, 1, lastColumn)
+    .getValues()[0]
+    .map(function (value) {
+      return String(value || "").trim();
+    });
+
+  const pinColumnIndex = headers.findIndex(function (header) {
+    return header.toUpperCase() === "PINHASH";
+  });
+
+  if (pinColumnIndex >= 0) {
+    return;
+  }
+
+  sheet.getRange(1, USER_HEADERS.length).setValue("PinHash");
+}
+
+
 function ensureSecurityFoundation_(spreadsheet) {
   const book = spreadsheet || SpreadsheetApp.getActiveSpreadsheet();
   const usersResult = getOrCreateSecuritySheet_(
@@ -506,6 +526,9 @@ function ensureSecurityFoundation_(spreadsheet) {
     USERS_SHEET,
     USER_HEADERS
   );
+
+  ensureUsersPinColumn_(usersResult.sheet);
+
   const auditResult = getOrCreateSecuritySheet_(
     book,
     AUDIT_LOG_SHEET,
@@ -645,10 +668,10 @@ function generateSessionToken_() {
 }
 
 
-function hashSessionToken_(token) {
+function hashSecret_(value) {
   const rawBytes = Utilities.computeDigest(
     Utilities.DigestAlgorithm.SHA_256,
-    String(token || "")
+    String(value || "")
   );
 
   return rawBytes
@@ -659,6 +682,11 @@ function hashSessionToken_(token) {
       return hex.length === 1 ? "0" + hex : hex;
     })
     .join("");
+}
+
+
+function hashSessionToken_(token) {
+  return hashSecret_(token);
 }
 
 
@@ -726,7 +754,7 @@ function listLoginableUsers() {
 }
 
 
-function login_(email, clientInfo) {
+function login_(email, pin, clientInfo) {
   ensureBackendFoundation_();
 
   const usersSheet = getUsersSheet_();
@@ -760,6 +788,38 @@ function login_(email, clientInfo) {
     );
 
     throw new Error("Обліковий запис деактивовано");
+  }
+
+  if (!user.pinHash) {
+    appendAuditLog_(
+      user.email,
+      user.userId,
+      user.role,
+      "LOGIN_FAILED",
+      "SESSION",
+      "",
+      "DENIED",
+      { reason: "PIN_NOT_SET" }
+    );
+
+    throw new Error("PIN не встановлено. Звернись до адміністратора.");
+  }
+
+  const providedPinHash = hashSecret_(String(pin || "").trim());
+
+  if (providedPinHash !== user.pinHash) {
+    appendAuditLog_(
+      user.email,
+      user.userId,
+      user.role,
+      "LOGIN_FAILED",
+      "SESSION",
+      "",
+      "DENIED",
+      { reason: "WRONG_PIN" }
+    );
+
+    throw new Error("Невірний PIN");
   }
 
   const sessionsSheet = getSessionsSheet_();
@@ -1288,7 +1348,7 @@ function getUser(userIdOrEmail) {
 }
 
 
-function createUser(email, name, role, active, comment) {
+function createUser(email, name, role, active, comment, pin) {
   ensureBackendFoundation_();
   const permission = requirePermission_(PERMISSIONS.USERS_MANAGE);
   const actor = permission.user || getCurrentUser_();
@@ -1300,6 +1360,7 @@ function createUser(email, name, role, active, comment) {
     ? true
     : normalizeBoolean_(active);
   const normalizedComment = String(comment || "").trim();
+  const pinHash = pin ? hashSecret_(validatePin_(pin)) : "";
 
   if (!normalizedName) {
     throw new Error("Вкажіть ім’я або назву користувача");
@@ -1330,7 +1391,8 @@ function createUser(email, name, role, active, comment) {
         now,
         now,
         "",
-        normalizedComment
+        normalizedComment,
+        pinHash
       ]]);
 
     appendAuditLog_(
@@ -1629,7 +1691,8 @@ function userFromValues_(row, sheetRow) {
     createdAt: row[5] || "",
     updatedAt: row[6] || "",
     lastLogin: row[7] || "",
-    comment: String(row[8] || "")
+    comment: String(row[8] || ""),
+    pinHash: String(row[9] || "")
   };
 }
 
@@ -1679,6 +1742,56 @@ function validateUserEmail_(email) {
 
   return normalizedEmail;
 }
+
+
+function validatePin_(pin) {
+  const normalizedPin = String(pin || "").trim();
+
+  if (!/^\d{4,6}$/.test(normalizedPin)) {
+    throw new Error("PIN має складатись із 4–6 цифр");
+  }
+
+  return normalizedPin;
+}
+
+
+function setUserPin_(email, newPin) {
+  ensureBackendFoundation_();
+  const permission = requirePermission_(PERMISSIONS.USERS_MANAGE);
+  const actor = permission.user || getCurrentUser_();
+
+  const normalizedEmail = validateUserEmail_(email);
+  const normalizedPin = validatePin_(newPin);
+
+  const sheet = getUsersSheet_();
+  const user = findUserByEmail_(sheet, normalizedEmail);
+
+  if (!user) {
+    throw new Error("Користувача не знайдено");
+  }
+
+  const pinHash = hashSecret_(normalizedPin);
+
+  sheet.getRange(user.row, 10).setValue(pinHash); // PinHash
+  sheet.getRange(user.row, 7).setValue(new Date()); // UpdatedAt
+
+  appendAuditLog_(
+    actor ? actor.email : "",
+    actor ? actor.userId : "",
+    actor ? actor.role : "",
+    "USER_PIN_SET",
+    "USER",
+    user.userId,
+    "SUCCESS",
+    { targetEmail: normalizedEmail }
+  );
+
+  return {
+    success: true,
+    message: "PIN оновлено"
+  };
+}
+
 
 
 function parseLogDetails_(details) {
@@ -4590,7 +4703,8 @@ function doGet(e) {
       "setUserActive",
       "disableUser",
       "enableUser",
-      "listAuditLog"
+      "listAuditLog",
+      "setUserPin"
     ];
 
     const ACTION_PERMISSIONS = {
@@ -4659,7 +4773,14 @@ function doGet(e) {
     if (action === "login") {
       return jsonp_(callback, {
         ok: true,
-        session: login_(parameters.email, parameters.clientInfo)
+        session: login_(parameters.email, parameters.pin, parameters.clientInfo)
+      });
+    }
+
+    if (action === "setUserPin") {
+      return jsonp_(callback, {
+        ok: true,
+        result: setUserPin_(parameters.email, parameters.pin)
       });
     }
 
@@ -5429,17 +5550,3 @@ function sanitizeCallback_(callback) {
 
   return "callback";
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
