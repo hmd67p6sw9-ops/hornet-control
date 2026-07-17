@@ -504,6 +504,10 @@
             Резервні копії
           </button>
 
+          <button class="secondary" onclick="openUsersModal()">
+            Користувачі
+          </button>
+
           <button class="danger" onclick="performLogout()">
             Вийти
           </button>
@@ -667,6 +671,98 @@
 
         <button class="secondary" onclick="closeBackupsModal()">
           Закрити
+        </button>
+      </div>
+    </div>
+
+    <div id="usersModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Користувачі</h3>
+
+        <button class="primary" onclick="openCreateUserModal()">
+          Додати користувача
+        </button>
+
+        <div id="usersList">
+          <div class="no-items">Завантаження…</div>
+        </div>
+
+        <div id="usersMessage" class="message hidden"></div>
+
+        <button class="secondary" onclick="closeUsersModal()">
+          Закрити
+        </button>
+      </div>
+    </div>
+
+    <div id="userFormModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 id="userFormTitle" class="modal-title">Новий користувач</h3>
+
+        <label class="form-label" for="userFormEmail">Email</label>
+        <input
+          id="userFormEmail"
+          class="form-input"
+          type="email"
+          autocomplete="off"
+        />
+
+        <label class="form-label" for="userFormName">Ім'я</label>
+        <input
+          id="userFormName"
+          class="form-input"
+          type="text"
+          autocomplete="off"
+        />
+
+        <label class="form-label" for="userFormRole">Роль</label>
+        <select id="userFormRole" class="form-input">
+          <option value="ADMIN">Адміністратор</option>
+          <option value="WAREHOUSE">Склад</option>
+          <option value="CLERK">Обліковець</option>
+          <option value="COMBAT">Бойовий підрозділ</option>
+        </select>
+
+        <div id="userFormActiveRow" class="hidden">
+          <label class="form-label" for="userFormActiveCheckbox">
+            <input
+              id="userFormActiveCheckbox"
+              type="checkbox"
+              style="width: auto; margin-right: 8px;"
+            />
+            Активний
+          </label>
+        </div>
+
+        <label class="form-label" for="userFormComment">Коментар</label>
+        <textarea
+          id="userFormComment"
+          class="form-input form-textarea"
+        ></textarea>
+
+        <label id="userFormPinLabel" class="form-label" for="userFormPin">
+          PIN (4–6 цифр)
+        </label>
+        <input
+          id="userFormPin"
+          class="form-input"
+          type="password"
+          inputmode="numeric"
+          maxlength="6"
+          autocomplete="off"
+        />
+
+        <div id="userFormMessage" class="message hidden"></div>
+
+        <button
+          id="userFormSaveButton"
+          class="primary"
+          onclick="submitUserForm()"
+        >
+          Зберегти
+        </button>
+        <button class="secondary" onclick="closeUserFormModal()">
+          Скасувати
         </button>
       </div>
     </div>
@@ -1061,6 +1157,7 @@
     <script src="diagnostics.js"></script>
     <script src="backups.js"></script>
     <script src="search.js"></script>
+    <script src="users.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
