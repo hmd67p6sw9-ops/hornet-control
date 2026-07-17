@@ -1321,7 +1321,8 @@ function listUsers() {
       }
 
       return first.name.localeCompare(second.name);
-    });
+    })
+    .map(serializeUser_);
 }
 
 
@@ -4828,7 +4829,8 @@ function doGet(e) {
           parameters.name,
           parameters.role,
           parameters.active,
-          parameters.comment
+          parameters.comment,
+          parameters.pin
         )
       });
     }
