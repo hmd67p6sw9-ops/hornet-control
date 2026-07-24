@@ -128,18 +128,26 @@
 
           <button
             class="dashboard-row"
-            onclick="openAircraftStatusList('БГ', 'Борти БГ')"
+            onclick="openAircraftStatusList('На позиції', 'Борти на позиції')"
           >
-            <span>БГ</span>
+            <span>На позиції</span>
             <strong id="dashboardAircraftReady">—</strong>
           </button>
 
           <button
             class="dashboard-row"
-            onclick="openAircraftStatusList('Майстерня', 'Борти в майстерні')"
+            onclick="openAircraftStatusList('На ремонті', 'Борти на ремонті')"
           >
-            <span>Майстерня</span>
-            <strong id="dashboardAircraftWorkshop">—</strong>
+            <span>На ремонті</span>
+            <strong id="dashboardAircraftRepair">—</strong>
+          </button>
+
+          <button
+            class="dashboard-row"
+            onclick="openAircraftStatusList('На переробці на БГ', 'Борти на переробці на БГ')"
+          >
+            <span>На переробці на БГ</span>
+            <strong id="dashboardAircraftRefurbish">—</strong>
           </button>
 
           <button
@@ -299,17 +307,16 @@
           </button>
           <button
             class="status-button workshop"
-            data-status="Майстерня"
-            onclick="changeStatus('Майстерня')"
+            onclick="openWorkshopChoiceModal()"
           >
             Майстерня
           </button>
           <button
             class="status-button ready"
-            data-status="БГ"
-            onclick="changeStatus('БГ')"
+            data-status="На позиції"
+            onclick="changeStatus('На позиції')"
           >
-            БГ
+            На позиції
           </button>
           <button
             class="status-button damaged"
@@ -372,8 +379,9 @@
           <select id="batchStatus" class="form-input">
             <option value="На складі">На складі</option>
             <option value="Активний">Активний</option>
-            <option value="БГ">БГ</option>
-            <option value="Майстерня">Майстерня</option>
+            <option value="На позиції">На позиції</option>
+            <option value="На ремонті">На ремонті</option>
+            <option value="На переробці на БГ">На переробці на БГ</option>
             <option value="Пошкоджено">Пошкоджено</option>
           </select>
 
@@ -813,8 +821,9 @@
         >
         <select id="newAircraftStatus" class="form-input">
           <option value="На складі">На складі</option>
-          <option value="Майстерня">Майстерня</option>
-          <option value="БГ">БГ</option>
+          <option value="На ремонті">На ремонті</option>
+          <option value="На переробці на БГ">На переробці на БГ</option>
+          <option value="На позиції">На позиції</option>
           <option value="Пошкоджено">Пошкоджено</option>
           <option value="Використаний">Використаний</option>
         </select>
@@ -1062,6 +1071,30 @@
 
         <button class="secondary" onclick="closeQrModal()">
           Закрити
+        </button>
+      </div>
+    </div>
+
+    <div id="workshopChoiceModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Майстерня</h3>
+
+        <p class="scanner-help">Обери, що саме відбувається з бортом</p>
+
+        <button
+          class="primary"
+          onclick="chooseWorkshopStatus('На ремонті')"
+        >
+          На ремонті
+        </button>
+        <button
+          class="secondary"
+          onclick="chooseWorkshopStatus('На переробці на БГ')"
+        >
+          На переробці на БГ
+        </button>
+        <button class="secondary" onclick="closeWorkshopChoiceModal()">
+          Скасувати
         </button>
       </div>
     </div>

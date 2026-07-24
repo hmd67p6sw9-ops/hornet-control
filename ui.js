@@ -239,8 +239,9 @@ function setStatusBadge(status) {
 
   const classes = {
     "На складі": "badge-storage",
-    Майстерня: "badge-workshop",
-    БГ: "badge-ready",
+    "На ремонті": "badge-workshop",
+    "На переробці на БГ": "badge-workshop",
+    "На позиції": "badge-ready",
     Пошкоджено: "badge-damaged",
     Використаний: "badge-written-off",
     Списаний: "badge-written-off",
@@ -250,7 +251,14 @@ function setStatusBadge(status) {
 }
 
 function updateStatusButtons(status) {
+  const WORKSHOP_STATUSES = ["На ремонті", "На переробці на БГ"];
+
   document.querySelectorAll(".status-button").forEach(function (button) {
+    if (button.id === "workshopStatusButton") {
+      button.disabled = WORKSHOP_STATUSES.indexOf(status) !== -1;
+      return;
+    }
+
     button.disabled = button.dataset.status === status;
   });
 }

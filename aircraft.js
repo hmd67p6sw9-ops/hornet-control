@@ -68,6 +68,21 @@ function changeStatus(status) {
   );
 }
 
+function openWorkshopChoiceModal() {
+  if (!selectedAircraftId) return;
+
+  document.getElementById("workshopChoiceModal").classList.remove("hidden");
+}
+
+function closeWorkshopChoiceModal() {
+  document.getElementById("workshopChoiceModal").classList.add("hidden");
+}
+
+function chooseWorkshopStatus(status) {
+  closeWorkshopChoiceModal();
+  changeStatus(status);
+}
+
 function searchAircraftFromApp() {
   const query = document
     .getElementById("aircraftSearchInput")

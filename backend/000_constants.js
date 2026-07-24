@@ -64,8 +64,9 @@ const STARLINK_COLUMNS = {
 const ALLOWED_STATUSES = [
   "Активний",
   "На складі",
-  "Майстерня",
-  "БГ",
+  "На ремонті",
+  "На переробці на БГ",
+  "На позиції",
   "Пошкоджено",
   "Використаний",
   "Списаний"
@@ -262,7 +263,7 @@ const SESSION_SCHEMA_VERSION = "1";
    ========================= */
 
 
-const BACKEND_FOUNDATION_VERSION = "1.6.1-alpha3.4";
+const BACKEND_FOUNDATION_VERSION = "1.6.1-alpha3.5";
 
 
 const FOUNDATION_CHECK_PROPERTY = "BACKEND_FOUNDATION_VERSION_ENSURED";

@@ -8,8 +8,10 @@ function dashboard() {
   const aircraftCounts = {
     Active: 0,
     Warehouse: 0,
-    Workshop: 0,
-    Ready: 0,
+    Workshop: 0, // сума Repair + Refurbish, лишено для сумісності
+    Repair: 0, // "На ремонті"
+    Refurbish: 0, // "На переробці на БГ"
+    Ready: 0, // "На позиції" (раніше "БГ")
     Damaged: 0,
     Used: 0,
     Total: 0
@@ -42,9 +44,13 @@ function dashboard() {
         aircraftCounts.Active++;
       } else if (status === "На складі") {
         aircraftCounts.Warehouse++;
-      } else if (status === "Майстерня") {
+      } else if (status === "На ремонті") {
+        aircraftCounts.Repair++;
         aircraftCounts.Workshop++;
-      } else if (status === "БГ") {
+      } else if (status === "На переробці на БГ") {
+        aircraftCounts.Refurbish++;
+        aircraftCounts.Workshop++;
+      } else if (status === "На позиції") {
         aircraftCounts.Ready++;
       } else if (status === "Пошкоджено") {
         aircraftCounts.Damaged++;

@@ -39,10 +39,12 @@ function normalizeAircraftStatusFilter_(status) {
     "АКТИВНИЙ": "Активний",
     WAREHOUSE: "На складі",
     "НА СКЛАДІ": "На складі",
-    WORKSHOP: "Майстерня",
-    "МАЙСТЕРНЯ": "Майстерня",
-    READY: "БГ",
-    "БГ": "БГ",
+    REPAIR: "На ремонті",
+    "НА РЕМОНТІ": "На ремонті",
+    REFURBISH: "На переробці на БГ",
+    "НА ПЕРЕРОБЦІ НА БГ": "На переробці на БГ",
+    READY: "На позиції",
+    "НА ПОЗИЦІЇ": "На позиції",
     DAMAGED: "Пошкоджено",
     "ПОШКОДЖЕНО": "Пошкоджено",
     USED: "Використаний",
@@ -580,4 +582,72 @@ function normalizeAircraftId_(value) {
 
   const match = text.match(/HN-\d{4}/);
   return match ? match[0] : "";
+}
+
+
+/**
+ * ОДНОРАЗОВА міграція (2026-07-24): перейменування статусів.
+ *   "БГ"        -> "На позиції"   (для ВСІХ бортів з цим статусом)
+ *   "Майстерня" -> "На переробці на БГ" (лише для HN-0003 і HN-0009 —
+ *                   решта бортів з "Майстерня" на момент міграції
+ *                   не було; якщо з'являться інші, лишаться без змін
+ *                   і потребуватимуть ручного рішення).
+ *
+ * Запускати вручну ОДИН РАЗ з редактора Apps Script (Run), не через
+ * doGet — це службова дія, не публічний API.
+ */
+function migrateAircraftStatusRename_20260724_() {
+  const sheet = getRequiredSheet_(AIRCRAFT_SHEET);
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow < 2) {
+    return { updated: 0 };
+  }
+
+  const REFURBISH_TARGET_IDS = ["HN-0003", "HN-0009"];
+
+  const values = sheet
+    .getRange(2, AIRCRAFT_COLUMNS.ID, lastRow - 1, 2)
+    .getValues();
+
+  let updated = 0;
+  const changes = [];
+
+  values.forEach(function (row, index) {
+    const id = normalizeAircraftId_(row[0]);
+    const status = String(row[1] || "").trim();
+
+    if (!id) {
+      return;
+    }
+
+    let newStatus = null;
+
+    if (status === "БГ") {
+      newStatus = "На позиції";
+    } else if (
+      status === "Майстерня" &&
+      REFURBISH_TARGET_IDS.indexOf(id) !== -1
+    ) {
+      newStatus = "На переробці на БГ";
+    }
+
+    if (newStatus) {
+      sheet
+        .getRange(index + 2, AIRCRAFT_COLUMNS.STATUS)
+        .setValue(newStatus);
+
+      updated++;
+      changes.push(id + ": " + status + " -> " + newStatus);
+    }
+  });
+
+  Logger.log(
+    "migrateAircraftStatusRename_20260724_: оновлено " +
+      updated +
+      " бортів.\n" +
+      changes.join("\n")
+  );
+
+  return { updated: updated, changes: changes };
 }
