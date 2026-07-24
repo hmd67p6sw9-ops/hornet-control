@@ -116,6 +116,7 @@ function getAvailableStarlinks(aircraftId) {
     const id = String(row[0] || "").trim();
     const status = String(row[1] || "").trim();
     const linkedAircraft = String(row[2] || "").trim().toUpperCase();
+    const serialNumber = String(row[3] || "").trim();
 
     if (!id) return;
 
@@ -127,6 +128,7 @@ function getAvailableStarlinks(aircraftId) {
     if (isFree || belongsToCurrentAircraft) {
       result.push({
         id: id,
+        serialNumber: serialNumber,
         status: status || "Вільний",
         linkedAircraft: linkedAircraft,
         current: belongsToCurrentAircraft

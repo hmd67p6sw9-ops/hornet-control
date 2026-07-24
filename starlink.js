@@ -206,8 +206,22 @@ function renderStarlinks(starlinks) {
     const text = document.createElement("span");
     text.className = "starlink-option-text";
 
+    // Серійний номер (KIT-номер) — головний, найпомітніший рядок.
+    // Inline-стиль про запас: навіть якщо клас .starlink-serial ще
+    // не описаний у styles.css, рядок однаково буде виділений.
+    const serial = document.createElement("span");
+    serial.className = "starlink-serial";
+    serial.style.display = "block";
+    serial.style.fontWeight = "700";
+    serial.style.fontSize = "1.05em";
+    serial.textContent = item.serialNumber || "Без серійного номера";
+
+    // Внутрішній ID (MINI_001 тощо) — другорядний рядок під серійником.
     const id = document.createElement("span");
-    id.className = "starlink-id";
+    id.className = "starlink-subid";
+    id.style.display = "block";
+    id.style.opacity = "0.7";
+    id.style.fontSize = "0.9em";
     id.textContent = item.id;
 
     const meta = document.createElement("span");
@@ -216,6 +230,7 @@ function renderStarlinks(starlinks) {
       ? "Зараз встановлений на цьому борту"
       : item.status || "Вільний";
 
+    text.appendChild(serial);
     text.appendChild(id);
     text.appendChild(meta);
     label.appendChild(radio);
