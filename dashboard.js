@@ -58,7 +58,8 @@ function renderDashboard(data) {
   setDashboardCount("dashboardAircraftActive", aircraft.Active);
   setDashboardCount("dashboardAircraftWarehouse", aircraft.Warehouse);
   setDashboardCount("dashboardAircraftReady", aircraft.Ready);
-  setDashboardCount("dashboardAircraftWorkshop", aircraft.Workshop);
+  setDashboardCount("dashboardAircraftRepair", aircraft.Repair);
+  setDashboardCount("dashboardAircraftRefurbish", aircraft.Refurbish);
   setDashboardCount("dashboardAircraftDamaged", aircraft.Damaged);
   setDashboardCount("dashboardAircraftUsed", aircraft.Used);
 
