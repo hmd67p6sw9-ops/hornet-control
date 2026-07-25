@@ -648,10 +648,7 @@ function drawSheetLabel(
     }
   );
 
-  if (
-    template.showSerial &&
-    serialNumber
-  ) {
+  if (serialNumber) {
     pdf.setFont(
       "helvetica",
       "normal"
@@ -851,10 +848,7 @@ function drawRollLabel(
     }
   );
 
-  if (
-    template.showSerial &&
-    serialNumber
-  ) {
+  if (serialNumber) {
     pdf.setFont(
       "helvetica",
       "normal"
