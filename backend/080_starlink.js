@@ -281,6 +281,160 @@ function createStarlink(
 }
 
 
+/**
+ * Масове створення STARLINK за один раз — приймає список серійних
+ * номерів (масив, або текст з роздільниками \n/,/;/tab, або JSON-рядок
+ * масиву), кожен стає окремим STARLINK зі статусом "Вільний". ID
+ * генеруються послідовно від наступного вільного номера.
+ */
+function createStarlinkBatch(serialNumbers, comment) {
+  const normalizedComment = String(comment || "").trim();
+  const values = parseStarlinkBatchSerialNumbers_(serialNumbers);
+
+  if (!values.length) {
+    throw new Error("Вкажи хоча б один серійний номер");
+  }
+
+  if (values.length > 500) {
+    throw new Error("Максимум 500 STARLINK за один раз");
+  }
+
+  const lock = LockService.getDocumentLock();
+  lock.waitLock(30000);
+
+  try {
+    const sheet = getRequiredSheet_(STARLINKS_SHEET);
+
+    validateStarlinkBatchSerialNumbers_(sheet, values);
+
+    const firstStarlinkId = getNextStarlinkIdFromSheet_(sheet);
+    const firstNumber = Number(firstStarlinkId.replace(/^MINI_/, ""));
+    const lastNumber = firstNumber + values.length - 1;
+
+    if (lastNumber > 9999) {
+      throw new Error(
+        "Партія виходить за межі діапазону MINI_0001–MINI_9999"
+      );
+    }
+
+    const rows = [];
+    const starlinkIds = [];
+
+    for (let index = 0; index < values.length; index++) {
+      const starlinkId =
+        "MINI_" + String(firstNumber + index).padStart(3, "0");
+
+      starlinkIds.push(starlinkId);
+
+      rows.push([
+        starlinkId,
+        "Вільний",
+        "",
+        values[index],
+        normalizedComment
+      ]);
+    }
+
+    const startRow = sheet.getLastRow() + 1;
+
+    sheet
+      .getRange(startRow, 1, rows.length, 5)
+      .setValues(rows);
+
+    return {
+      success: true,
+      message: "Створено " + starlinkIds.length + " STARLINK",
+      quantity: starlinkIds.length,
+      firstStarlink: starlinkIds[0],
+      lastStarlink: starlinkIds[starlinkIds.length - 1],
+      starlinkIds: starlinkIds
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+
+function parseStarlinkBatchSerialNumbers_(serialNumbers) {
+  let values = [];
+
+  if (Array.isArray(serialNumbers)) {
+    values = serialNumbers;
+  } else {
+    const text = String(serialNumbers || "").trim();
+
+    if (text) {
+      try {
+        const parsed = JSON.parse(text);
+        values = Array.isArray(parsed)
+          ? parsed
+          : text.split(/[\n,;\t]+/);
+      } catch (error) {
+        values = text.split(/[\n,;\t]+/);
+      }
+    }
+  }
+
+  const normalized = values
+    .map(function (value) {
+      return String(value || "").trim();
+    })
+    .filter(function (value) {
+      return Boolean(value);
+    });
+
+  const upper = normalized.map(function (value) {
+    return value.toUpperCase();
+  });
+
+  if (new Set(upper).size !== upper.length) {
+    throw new Error("У списку є дублікати серійних номерів");
+  }
+
+  return normalized;
+}
+
+
+function validateStarlinkBatchSerialNumbers_(sheet, serialNumbers) {
+  const requested = new Set(
+    serialNumbers.map(function (value) {
+      return value.toUpperCase();
+    })
+  );
+
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow < 2) {
+    return;
+  }
+
+  const values = sheet
+    .getRange(2, 1, lastRow - 1, STARLINK_COLUMNS.SERIAL_NUMBER)
+    .getValues();
+
+  for (let index = 0; index < values.length; index++) {
+    const serial = String(
+      values[index][STARLINK_COLUMNS.SERIAL_NUMBER - 1] || ""
+    )
+      .trim()
+      .toUpperCase();
+
+    if (serial && requested.has(serial)) {
+      const starlinkId = String(
+        values[index][STARLINK_COLUMNS.ID - 1] || ""
+      ).trim();
+
+      throw new Error(
+        "Серійний номер " +
+        serial +
+        " уже використовується STARLINK " +
+        starlinkId
+      );
+    }
+  }
+}
+
+
 function assignStarlink(aircraftId, starlinkId) {
   const normalizedAircraftId = normalizeAircraftId_(aircraftId);
   const normalizedStarlinkId = String(starlinkId || "").trim();

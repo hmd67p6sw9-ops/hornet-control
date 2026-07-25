@@ -499,6 +499,9 @@
           <button class="secondary" onclick="openCreateStarlinkModal()">
             Додати STARLINK
           </button>
+          <button class="secondary" onclick="openCreateStarlinkBatchModal()">
+            Масове додавання STARLINK
+          </button>
 
           <button class="secondary" onclick="openQrQueueModal()">
             QR на друк
@@ -928,6 +931,51 @@
           Створити STARLINK
         </button>
         <button class="secondary" onclick="closeCreateStarlinkModal()">
+          Скасувати
+        </button>
+      </div>
+    </div>
+
+    <div id="createStarlinkBatchModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Масове додавання STARLINK</h3>
+
+        <p class="scanner-help">
+          Встав список серійних номерів (по одному в рядку, або через
+          кому) — кожен стане окремим STARLINK зі статусом "Вільний".
+        </p>
+
+        <label class="form-label" for="starlinkBatchSerials"
+          >Серійні номери</label
+        >
+        <textarea
+          id="starlinkBatchSerials"
+          class="form-input form-textarea"
+          rows="10"
+          oninput="updateStarlinkBatchCount()"
+          placeholder="KIT4M04971717M8V&#10;KIT4M04972270JVX&#10;KIT4M04972295FBT&#10;…"
+        ></textarea>
+
+        <div id="starlinkBatchCount" class="scanner-help"></div>
+
+        <label class="form-label" for="starlinkBatchComment"
+          >Коментар (застосується до всіх)</label
+        >
+        <textarea
+          id="starlinkBatchComment"
+          class="form-input form-textarea"
+        ></textarea>
+
+        <div id="createStarlinkBatchMessage" class="message hidden"></div>
+
+        <button
+          id="createStarlinkBatchButton"
+          class="primary"
+          onclick="createStarlinkBatchFromApp()"
+        >
+          Створити всі STARLINK
+        </button>
+        <button class="secondary" onclick="closeCreateStarlinkBatchModal()">
           Скасувати
         </button>
       </div>

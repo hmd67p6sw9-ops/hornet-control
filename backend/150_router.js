@@ -96,6 +96,7 @@ function doGet(e) {
       searchStarlinks: PERMISSIONS.STARLINK_VIEW,
       nextStarlinkId: PERMISSIONS.STARLINK_VIEW,
       createStarlink: PERMISSIONS.STARLINK_CREATE,
+      createStarlinkBatch: PERMISSIONS.STARLINK_CREATE,
       assignStarlink: PERMISSIONS.STARLINK_ASSIGN,
 
       createBatch: PERMISSIONS.BATCH_CREATE,
@@ -393,6 +394,16 @@ function doGet(e) {
         ok: true,
         result: createStarlink(
           parameters.serialNumber,
+          parameters.comment
+        )
+      });
+    }
+
+    if (action === "createStarlinkBatch") {
+      return jsonp_(callback, {
+        ok: true,
+        result: createStarlinkBatch(
+          parameters.serialNumbers,
           parameters.comment
         )
       });
