@@ -104,10 +104,67 @@ function renderBatchSerialInputs() {
     input.placeholder = "Серійний номер";
     input.value = existingValues[index] || "";
 
+    attachBatchSerialPasteHandler(input, index, quantity);
+
     wrapper.appendChild(label);
     wrapper.appendChild(input);
     container.appendChild(wrapper);
   }
+}
+
+// Дозволяє вставити (Ctrl+V / Cmd+V) одразу весь список серійних
+// номерів (по одному на рядок, скопійований, наприклад, з Excel/Google
+// Sheets або накладної) у БУДЬ-ЯКЕ поле — значення автоматично
+// розподіляться по цьому і всіх наступних полях. Звичайна вставка
+// одного значення в одне поле й далі працює як завжди.
+function attachBatchSerialPasteHandler(input, index, totalCount) {
+  input.addEventListener("paste", function (event) {
+    const clipboardData = event.clipboardData || window.clipboardData;
+    const text = clipboardData ? clipboardData.getData("text") : "";
+
+    const values = text
+      .split(/\r\n|\r|\n|\t/)
+      .map(function (value) {
+        return value.trim();
+      })
+      .filter(function (value) {
+        return value.length > 0;
+      });
+
+    // Якщо вставляється лише один рядок — не перехоплюємо вставку,
+    // хай браузер сам вставить значення у це єдине поле як завжди.
+    if (values.length <= 1) {
+      return;
+    }
+
+    event.preventDefault();
+
+    for (
+      let offset = 0;
+      offset < values.length && index + offset < totalCount;
+      offset++
+    ) {
+      const targetInput = document.getElementById(
+        "batchSerial" + (index + offset)
+      );
+
+      if (targetInput) {
+        targetInput.value = values[offset];
+      }
+    }
+
+    if (values.length > totalCount - index) {
+      showGenericMessage(
+        "batchMessage",
+        "Вставлено " +
+          (totalCount - index) +
+          " з " +
+          values.length +
+          " значень — решта не поміщається в кількість партії.",
+        "info"
+      );
+    }
+  });
 }
 
 function createBatchFromApp() {
