@@ -244,7 +244,11 @@ function buildAircraftListMeta(item) {
   }
 
   if (item.starlink) {
-    parts.push(item.starlink);
+    parts.push(
+      item.starlinkSerialNumber
+        ? item.starlinkSerialNumber + " (" + item.starlink + ")"
+        : item.starlink
+    );
   }
 
   return parts.join(" • ");

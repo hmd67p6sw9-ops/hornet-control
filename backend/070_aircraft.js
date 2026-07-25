@@ -19,7 +19,7 @@ function listAircraftByStatus(status) {
     .getRange(2, 1, lastRow - 1, AIRCRAFT_COLUMNS.BATCH_ID)
     .getValues();
 
-  return values
+  const matched = values
     .map(function (row, index) {
       return aircraftFromValues_(row, index + 2);
     })
@@ -29,6 +29,56 @@ function listAircraftByStatus(status) {
         acceptedStatus
       );
     });
+
+  attachStarlinkSerialNumbers_(matched);
+
+  return matched;
+}
+
+
+function attachStarlinkSerialNumbers_(aircraftList) {
+  const neededIds = new Set(
+    aircraftList
+      .map(function (aircraft) {
+        return aircraft.starlink;
+      })
+      .filter(function (id) {
+        return Boolean(id);
+      })
+  );
+
+  if (!neededIds.size) {
+    return;
+  }
+
+  const starlinksSheet = getRequiredSheet_(STARLINKS_SHEET);
+  const lastRow = starlinksSheet.getLastRow();
+
+  if (lastRow < 2) {
+    return;
+  }
+
+  const values = starlinksSheet
+    .getRange(2, 1, lastRow - 1, STARLINK_COLUMNS.SERIAL_NUMBER)
+    .getValues();
+
+  const serialById = {};
+
+  values.forEach(function (row) {
+    const id = String(row[STARLINK_COLUMNS.ID - 1] || "").trim();
+
+    if (id && neededIds.has(id)) {
+      serialById[id] = String(
+        row[STARLINK_COLUMNS.SERIAL_NUMBER - 1] || ""
+      ).trim();
+    }
+  });
+
+  aircraftList.forEach(function (aircraft) {
+    if (aircraft.starlink && serialById[aircraft.starlink]) {
+      aircraft.starlinkSerialNumber = serialById[aircraft.starlink];
+    }
+  });
 }
 
 
