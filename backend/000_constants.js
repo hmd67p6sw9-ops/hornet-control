@@ -1,5 +1,4 @@
 
-000 constants · JS
 const AIRCRAFT_SHEET = "Aircraft";
 
 
