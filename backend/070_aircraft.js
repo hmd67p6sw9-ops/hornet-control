@@ -34,9 +34,10 @@ function listAircraftByStatus(status) {
 
 function normalizeAircraftStatusFilter_(status) {
   const aliases = {
-    ACTIVE: "Активний",
-    "АКТИВНІ": "Активний",
-    "АКТИВНИЙ": "Активний",
+    "БГ": "БГ",
+    ACTIVE: "БГ",
+    "АКТИВНІ": "БГ",
+    "АКТИВНИЙ": "БГ",
     WAREHOUSE: "На складі",
     "НА СКЛАДІ": "На складі",
     REPAIR: "На ремонті",

@@ -1,3 +1,5 @@
+
+000 constants · JS
 const AIRCRAFT_SHEET = "Aircraft";
 
 
@@ -62,7 +64,7 @@ const STARLINK_COLUMNS = {
 
 
 const ALLOWED_STATUSES = [
-  "Активний",
+  "БГ",
   "На складі",
   "На ремонті",
   "На переробці на БГ",
@@ -286,3 +288,4 @@ const HEADER_ALIASES = {
   OldStatus: ["OldStatus", "Старий статус"],
   NewStatus: ["NewStatus", "Новий статус"]
 };
+

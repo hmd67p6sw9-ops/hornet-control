@@ -40,7 +40,7 @@ function dashboard() {
 
       aircraftCounts.Total++;
 
-      if (status === "Активний") {
+      if (status === "БГ") {
         aircraftCounts.Active++;
       } else if (status === "На складі") {
         aircraftCounts.Warehouse++;

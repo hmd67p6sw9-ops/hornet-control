@@ -112,9 +112,9 @@
 
           <button
             class="dashboard-row"
-            onclick="openAircraftStatusList('Активний', 'Активні борти')"
+            onclick="openAircraftStatusList('БГ', 'Борти БГ')"
           >
-            <span>Активні</span>
+            <span>БГ</span>
             <strong id="dashboardAircraftActive">—</strong>
           </button>
 
@@ -306,6 +306,7 @@
             На складі
           </button>
           <button
+            id="workshopStatusButton"
             class="status-button workshop"
             onclick="openWorkshopChoiceModal()"
           >
@@ -378,7 +379,7 @@
           <label class="form-label" for="batchStatus">Статус</label>
           <select id="batchStatus" class="form-input">
             <option value="На складі">На складі</option>
-            <option value="Активний">Активний</option>
+            <option value="БГ">БГ</option>
             <option value="На позиції">На позиції</option>
             <option value="На ремонті">На ремонті</option>
             <option value="На переробці на БГ">На переробці на БГ</option>
@@ -824,6 +825,7 @@
           <option value="На ремонті">На ремонті</option>
           <option value="На переробці на БГ">На переробці на БГ</option>
           <option value="На позиції">На позиції</option>
+          <option value="БГ">БГ</option>
           <option value="Пошкоджено">Пошкоджено</option>
           <option value="Використаний">Використаний</option>
         </select>
@@ -1092,6 +1094,12 @@
           onclick="chooseWorkshopStatus('На переробці на БГ')"
         >
           На переробці на БГ
+        </button>
+        <button
+          class="secondary"
+          onclick="chooseWorkshopStatus('БГ')"
+        >
+          БГ
         </button>
         <button class="secondary" onclick="closeWorkshopChoiceModal()">
           Скасувати
