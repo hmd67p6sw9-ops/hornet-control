@@ -123,7 +123,7 @@ function attachBatchSerialPasteHandler(input, index, totalCount) {
     const text = clipboardData ? clipboardData.getData("text") : "";
 
     const values = text
-      .split(/\r\n|\r|\n|\t/)
+      .split(/\r\n|\r|\n|\t|,/)
       .map(function (value) {
         return value.trim();
       })
