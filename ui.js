@@ -252,11 +252,13 @@ function setStatusBadge(status) {
 }
 
 function updateStatusButtons(status) {
-  const WORKSHOP_STATUSES = ["На ремонті", "На переробці на БГ"];
-
   document.querySelectorAll(".status-button").forEach(function (button) {
     if (button.id === "workshopStatusButton") {
-      button.disabled = WORKSHOP_STATUSES.indexOf(status) !== -1;
+      // Ця кнопка відкриває вибір із трьох статусів (На ремонті /
+      // На переробці на БГ / БГ) — вона завжди активна, незалежно
+      // від поточного статусу, щоб можна було переходити МІЖ цими
+      // станами (наприклад, з "На переробці на БГ" одразу в "БГ").
+      button.disabled = false;
       return;
     }
 
