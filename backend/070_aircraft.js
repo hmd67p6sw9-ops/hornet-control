@@ -139,7 +139,11 @@ function getAircraft(id) {
     throw new Error("Борт " + normalizedId + " не знайдено");
   }
 
-  return aircraftFromRow_(sheet, row);
+  const aircraft = aircraftFromRow_(sheet, row);
+
+  attachStarlinkSerialNumbers_([aircraft]);
+
+  return aircraft;
 }
 
 
@@ -178,7 +182,11 @@ function searchAircraft(query) {
     }
   });
 
-  return result.slice(0, 25);
+  const limited = result.slice(0, 25);
+
+  attachStarlinkSerialNumbers_(limited);
+
+  return limited;
 }
 
 
@@ -318,6 +326,25 @@ function updateAircraftStatus(id, newStatus) {
   }
 
   const now = new Date();
+
+  // Гарантовано оновлюємо правило валідації САМЕ для цього рядка перед
+  // записом — це усуває помилку "Дані не відповідають правилам
+  // перевірки", яка траплялась, якщо загальна (кешована) перевірка
+  // foundation ще не встигла охопити цей рядок чи оновлений список
+  // статусів (наприклад, після масового додавання бортів чи
+  // перейменування статусів).
+  sheet
+    .getRange(row, AIRCRAFT_COLUMNS.STATUS)
+    .setDataValidation(
+      SpreadsheetApp
+        .newDataValidation()
+        .requireValueInList(ALLOWED_STATUSES, true)
+        .setAllowInvalid(false)
+        .setHelpText("Вибери статус зі списку")
+        .build()
+    );
+
+  SpreadsheetApp.flush();
 
   sheet.getRange(row, AIRCRAFT_COLUMNS.STATUS).setValue(normalizedStatus);
   sheet.getRange(row, AIRCRAFT_COLUMNS.LAST_CHANGE).setValue(now);

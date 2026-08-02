@@ -23,7 +23,15 @@ function showAircraft(aircraft) {
   document.getElementById("aircraftId").textContent = aircraft.id;
 
   setStatusBadge(aircraft.status);
-  setFieldValue("starlink", aircraft.starlink, "Не прив’язаний");
+  setFieldValue(
+    "starlink",
+    aircraft.starlink
+      ? aircraft.starlinkSerialNumber
+        ? aircraft.starlinkSerialNumber + " (" + aircraft.starlink + ")"
+        : aircraft.starlink
+      : "",
+    "Не прив’язаний",
+  );
   setFieldValue("serialNumber", aircraft.serialNumber, "Не вказано");
   setFieldValue("receivedDate", aircraft.receivedDate, "Не вказано");
   setFieldValue("lastChange", aircraft.lastChange, "Немає даних");
@@ -66,21 +74,6 @@ function changeStatus(status) {
       setTimeout(scanAnotherAircraft, 1200);
     },
   );
-}
-
-function openWorkshopChoiceModal() {
-  if (!selectedAircraftId) return;
-
-  document.getElementById("workshopChoiceModal").classList.remove("hidden");
-}
-
-function closeWorkshopChoiceModal() {
-  document.getElementById("workshopChoiceModal").classList.add("hidden");
-}
-
-function chooseWorkshopStatus(status) {
-  closeWorkshopChoiceModal();
-  changeStatus(status);
 }
 
 function searchAircraftFromApp() {

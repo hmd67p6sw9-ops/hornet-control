@@ -284,10 +284,25 @@ function assignStarlink(starlinkId) {
       }
 
       currentStarlinkId = response.result.starlink || "";
-      setFieldValue("starlink", currentStarlinkId, "Не прив’язаний");
 
-      if (currentAircraftData)
+      setFieldValue(
+        "starlink",
+        currentStarlinkId
+          ? response.result.starlinkSerialNumber
+            ? response.result.starlinkSerialNumber +
+              " (" +
+              currentStarlinkId +
+              ")"
+            : currentStarlinkId
+          : "",
+        "Не прив’язаний",
+      );
+
+      if (currentAircraftData) {
         currentAircraftData.starlink = currentStarlinkId;
+        currentAircraftData.starlinkSerialNumber =
+          response.result.starlinkSerialNumber || "";
+      }
 
       showStarlinkMessage(response.result.message, "success");
 
@@ -311,138 +326,4 @@ function setStarlinkModalButtonsDisabled(disabled) {
     .forEach(function (button) {
       button.disabled = disabled;
     });
-}
-
-function parseStarlinkBatchInput(text) {
-  return text
-    .split(/\r\n|\r|\n|\t|,/)
-    .map(function (value) {
-      return value.trim();
-    })
-    .filter(function (value) {
-      return value.length > 0;
-    });
-}
-
-function updateStarlinkBatchCount() {
-  const text = document.getElementById("starlinkBatchSerials").value;
-  const values = parseStarlinkBatchInput(text);
-  const counter = document.getElementById("starlinkBatchCount");
-
-  if (!values.length) {
-    counter.textContent = "";
-    return;
-  }
-
-  const uniqueCount = new Set(
-    values.map(function (value) {
-      return value.toUpperCase();
-    })
-  ).size;
-
-  if (uniqueCount !== values.length) {
-    counter.textContent =
-      "Знайдено " +
-      values.length +
-      " значень, але є дублікати (унікальних: " +
-      uniqueCount +
-      ")";
-    return;
-  }
-
-  counter.textContent = "Знайдено " + values.length + " серійних номерів";
-}
-
-function openCreateStarlinkBatchModal() {
-  closeAdminMenu();
-
-  document.getElementById("starlinkBatchSerials").value = "";
-  document.getElementById("starlinkBatchComment").value = "";
-  document.getElementById("starlinkBatchCount").textContent = "";
-
-  hideGenericMessage("createStarlinkBatchMessage");
-  setFormDisabled("createStarlinkBatchModal", false);
-
-  document
-    .getElementById("createStarlinkBatchModal")
-    .classList.remove("hidden");
-}
-
-function closeCreateStarlinkBatchModal() {
-  document
-    .getElementById("createStarlinkBatchModal")
-    .classList.add("hidden");
-  setFormDisabled("createStarlinkBatchModal", false);
-}
-
-function createStarlinkBatchFromApp() {
-  const text = document.getElementById("starlinkBatchSerials").value;
-  const comment = document
-    .getElementById("starlinkBatchComment")
-    .value.trim();
-
-  const values = parseStarlinkBatchInput(text);
-
-  if (!values.length) {
-    showGenericMessage(
-      "createStarlinkBatchMessage",
-      "Встав хоча б один серійний номер",
-      "error",
-    );
-    return;
-  }
-
-  const uniqueCount = new Set(
-    values.map(function (value) {
-      return value.toUpperCase();
-    })
-  ).size;
-
-  if (uniqueCount !== values.length) {
-    showGenericMessage(
-      "createStarlinkBatchMessage",
-      "У списку є дублікати серійних номерів",
-      "error",
-    );
-    return;
-  }
-
-  setFormDisabled("createStarlinkBatchModal", true);
-  showGenericMessage(
-    "createStarlinkBatchMessage",
-    "Створення " + values.length + " STARLINK…",
-    "info",
-  );
-
-  apiRequest(
-    {
-      action: "createStarlinkBatch",
-      serialNumbers: JSON.stringify(values),
-      comment: comment,
-    },
-    function (response) {
-      setFormDisabled("createStarlinkBatchModal", false);
-
-      if (!response.ok) {
-        showGenericMessage(
-          "createStarlinkBatchMessage",
-          response.error || "Не вдалося створити STARLINK",
-          "error",
-        );
-        return;
-      }
-
-      showGenericMessage(
-        "createStarlinkBatchMessage",
-        response.result.message || "STARLINK створено",
-        "success",
-      );
-
-      if (navigator.vibrate) navigator.vibrate(150);
-
-      setTimeout(function () {
-        closeCreateStarlinkBatchModal();
-      }, 1200);
-    },
-  );
 }

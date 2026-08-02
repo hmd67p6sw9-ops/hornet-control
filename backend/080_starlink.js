@@ -486,6 +486,7 @@ function assignStarlink(aircraftId, starlinkId) {
   }
 
   let newStarlinkRow = null;
+  let newStarlinkSerialNumber = "";
 
   if (normalizedStarlinkId) {
     newStarlinkRow = findStarlinkRow_(
@@ -502,6 +503,10 @@ function assignStarlink(aircraftId, starlinkId) {
     const newStarlinkValues = starlinksSheet
       .getRange(newStarlinkRow, 1, 1, 5)
       .getValues()[0];
+
+    newStarlinkSerialNumber = String(
+      newStarlinkValues[STARLINK_COLUMNS.SERIAL_NUMBER - 1] || ""
+    ).trim();
 
     const newStarlinkStatus = String(
       newStarlinkValues[1] || ""
@@ -575,7 +580,8 @@ function assignStarlink(aircraftId, starlinkId) {
     message: normalizedStarlinkId
       ? "Starlink прив’язано"
       : "Starlink відв’язано",
-    starlink: normalizedStarlinkId
+    starlink: normalizedStarlinkId,
+    starlinkSerialNumber: newStarlinkSerialNumber
   };
 }
 
@@ -737,15 +743,13 @@ function markLinkedStarlinkLost_(aircraftSheet, aircraftRow) {
     .getRange(starlinkRow, STARLINK_COLUMNS.STATUS)
     .setValue("Втрачений");
 
+  // Втрачений STARLINK більше не прив'язаний до жодного борта —
+  // раніше тут помилково записувався ID борта замість очищення,
+  // через що Dashboard рахував такий STARLINK як "На бортах",
+  // а не "Втрачені".
   starlinksSheet
     .getRange(starlinkRow, STARLINK_COLUMNS.AIRCRAFT_ID)
-    .setValue(
-      String(
-        aircraftSheet
-          .getRange(aircraftRow, AIRCRAFT_COLUMNS.ID)
-          .getValue() || ""
-      ).trim()
-    );
+    .setValue("");
 }
 
 
