@@ -98,6 +98,7 @@ function doGet(e) {
       createStarlink: PERMISSIONS.STARLINK_CREATE,
       createStarlinkBatch: PERMISSIONS.STARLINK_CREATE,
       assignStarlink: PERMISSIONS.STARLINK_ASSIGN,
+      setStarlinkStatus: PERMISSIONS.STARLINK_ASSIGN,
 
       createBatch: PERMISSIONS.BATCH_CREATE,
 
@@ -404,7 +405,8 @@ function doGet(e) {
         ok: true,
         result: createStarlinkBatch(
           parameters.serialNumbers,
-          parameters.comment
+          parameters.comment,
+          parameters.initialStatus
         )
       });
     }
@@ -415,6 +417,16 @@ function doGet(e) {
         result: assignStarlink(
           parameters.id,
           parameters.starlink
+        )
+      });
+    }
+
+    if (action === "setStarlinkStatus") {
+      return jsonp_(callback, {
+        ok: true,
+        result: setStarlinkStatus(
+          parameters.id,
+          parameters.status
         )
       });
     }

@@ -72,7 +72,11 @@ function renderStarlinkSearchResults(items) {
   });
 }
 
+let currentStarlinkInfoId = "";
+
 function showStarlinkInfo(item) {
+  currentStarlinkInfoId = item.id || "";
+
   document.getElementById("starlinkInfoId").textContent =
     item.id || "Не вказано";
   document.getElementById("starlinkInfoStatus").textContent =
@@ -84,7 +88,58 @@ function showStarlinkInfo(item) {
   );
   setFieldValue("starlinkInfoSerial", item.serialNumber, "Не вказано");
   setFieldValue("starlinkInfoComment", item.comment, "Немає коментаря");
+
+  hideGenericMessage("starlinkInfoStatusMessage");
   document.getElementById("starlinkInfoModal").classList.remove("hidden");
+}
+
+function changeStarlinkStatusFromInfo() {
+  if (!currentStarlinkInfoId) return;
+
+  const newStatus = document.getElementById(
+    "starlinkInfoNewStatus",
+  ).value;
+
+  const button = document.getElementById("starlinkInfoStatusButton");
+  button.disabled = true;
+
+  showGenericMessage(
+    "starlinkInfoStatusMessage",
+    "Зміна статусу…",
+    "info",
+  );
+
+  apiRequest(
+    {
+      action: "setStarlinkStatus",
+      id: currentStarlinkInfoId,
+      status: newStatus,
+    },
+    function (response) {
+      button.disabled = false;
+
+      if (!response.ok) {
+        showGenericMessage(
+          "starlinkInfoStatusMessage",
+          response.error || "Не вдалося змінити статус",
+          "error",
+        );
+        return;
+      }
+
+      showGenericMessage(
+        "starlinkInfoStatusMessage",
+        response.result.message || "Статус змінено",
+        "success",
+      );
+
+      if (navigator.vibrate) navigator.vibrate(150);
+
+      if (response.result.starlink) {
+        showStarlinkInfo(response.result.starlink);
+      }
+    },
+  );
 }
 
 function clearStarlinkSearch() {
@@ -374,6 +429,7 @@ function openCreateStarlinkBatchModal() {
   document.getElementById("starlinkBatchSerials").value = "";
   document.getElementById("starlinkBatchComment").value = "";
   document.getElementById("starlinkBatchCount").textContent = "";
+  document.getElementById("starlinkBatchStatus").value = "Вільний";
 
   hideGenericMessage("createStarlinkBatchMessage");
   setFormDisabled("createStarlinkBatchModal", false);
@@ -395,6 +451,8 @@ function createStarlinkBatchFromApp() {
   const comment = document
     .getElementById("starlinkBatchComment")
     .value.trim();
+  const initialStatus =
+    document.getElementById("starlinkBatchStatus").value;
 
   const values = parseStarlinkBatchInput(text);
 
@@ -434,6 +492,7 @@ function createStarlinkBatchFromApp() {
       action: "createStarlinkBatch",
       serialNumbers: JSON.stringify(values),
       comment: comment,
+      initialStatus: initialStatus,
     },
     function (response) {
       setFormDisabled("createStarlinkBatchModal", false);

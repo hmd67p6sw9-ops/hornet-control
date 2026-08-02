@@ -966,6 +966,17 @@
           class="form-input form-textarea"
         ></textarea>
 
+        <label class="form-label" for="starlinkBatchStatus"
+          >Початковий статус</label
+        >
+        <select id="starlinkBatchStatus" class="form-input">
+          <option value="Вільний">Вільний</option>
+          <option value="Несправний">Несправний</option>
+          <option value="Ремонт">Ремонт</option>
+          <option value="Втрачений">Втрачений</option>
+          <option value="Списаний">Списаний</option>
+        </select>
+
         <div id="createStarlinkBatchMessage" class="message hidden"></div>
 
         <button
@@ -1009,6 +1020,27 @@
           <div class="label">Коментар</div>
           <div id="starlinkInfoComment" class="value"></div>
         </div>
+
+        <label class="form-label" for="starlinkInfoNewStatus"
+          >Змінити статус на</label
+        >
+        <select id="starlinkInfoNewStatus" class="form-input">
+          <option value="Вільний">Вільний</option>
+          <option value="Несправний">Несправний</option>
+          <option value="Ремонт">Ремонт</option>
+          <option value="Втрачений">Втрачений</option>
+          <option value="Списаний">Списаний</option>
+        </select>
+
+        <div id="starlinkInfoStatusMessage" class="message hidden"></div>
+
+        <button
+          id="starlinkInfoStatusButton"
+          class="primary"
+          onclick="changeStarlinkStatusFromInfo()"
+        >
+          Змінити статус
+        </button>
 
         <button class="secondary" onclick="closeStarlinkInfoModal()">
           Закрити

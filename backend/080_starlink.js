@@ -287,9 +287,23 @@ function createStarlink(
  * масиву), кожен стає окремим STARLINK зі статусом "Вільний". ID
  * генеруються послідовно від наступного вільного номера.
  */
-function createStarlinkBatch(serialNumbers, comment) {
+function createStarlinkBatch(serialNumbers, comment, initialStatus) {
   const normalizedComment = String(comment || "").trim();
   const values = parseStarlinkBatchSerialNumbers_(serialNumbers);
+
+  const MANUAL_STARLINK_STATUSES = [
+    "Вільний",
+    "Несправний",
+    "Ремонт",
+    "Втрачений",
+    "Списаний"
+  ];
+
+  const normalizedStatus = String(initialStatus || "Вільний").trim();
+
+  if (MANUAL_STARLINK_STATUSES.indexOf(normalizedStatus) === -1) {
+    throw new Error("Некоректний початковий статус STARLINK");
+  }
 
   if (!values.length) {
     throw new Error("Вкажи хоча б один серійний номер");
@@ -328,7 +342,7 @@ function createStarlinkBatch(serialNumbers, comment) {
 
       rows.push([
         starlinkId,
-        "Вільний",
+        normalizedStatus,
         "",
         values[index],
         normalizedComment
@@ -432,6 +446,77 @@ function validateStarlinkBatchSerialNumbers_(sheet, serialNumbers) {
       );
     }
   }
+}
+
+
+/**
+ * Ручна зміна статусу одного STARLINK (наприклад, з картки після
+ * пошуку за KIT-номером) — не пов'язана з прив'язкою до борта.
+ * Якщо STARLINK на момент зміни прив'язаний до борта і новий статус
+ * не "Вільний" — прив'язка знімається з обох боків (борт більше не
+ * показуватиме цей STARLINK як встановлений).
+ */
+function setStarlinkStatus(starlinkId, newStatus) {
+  const normalizedId = normalizeStarlinkId_(starlinkId);
+  const normalizedStatus = String(newStatus || "").trim();
+
+  const MANUAL_STARLINK_STATUSES = [
+    "Вільний",
+    "Несправний",
+    "Ремонт",
+    "Втрачений",
+    "Списаний"
+  ];
+
+  if (!normalizedId) {
+    throw new Error("Не вказано ID STARLINK");
+  }
+
+  if (MANUAL_STARLINK_STATUSES.indexOf(normalizedStatus) === -1) {
+    throw new Error("Некоректний статус STARLINK");
+  }
+
+  const sheet = getRequiredSheet_(STARLINKS_SHEET);
+  const row = findStarlinkRow_(sheet, normalizedId);
+
+  if (!row) {
+    throw new Error("STARLINK " + normalizedId + " не знайдено");
+  }
+
+  const linkedAircraft = String(
+    sheet.getRange(row, STARLINK_COLUMNS.AIRCRAFT_ID).getValue() || ""
+  ).trim();
+
+  sheet.getRange(row, STARLINK_COLUMNS.STATUS).setValue(normalizedStatus);
+
+  if (linkedAircraft) {
+    // "Вільний" і решта ручних статусів однаково несумісні з
+    // прив'язкою до борта — знімаємо її з обох боків.
+    sheet.getRange(row, STARLINK_COLUMNS.AIRCRAFT_ID).setValue("");
+
+    const aircraftSheet = getRequiredSheet_(AIRCRAFT_SHEET);
+    const aircraftRow = findAircraftRow_(aircraftSheet, linkedAircraft);
+
+    if (aircraftRow) {
+      const currentAircraftStarlink = String(
+        aircraftSheet
+          .getRange(aircraftRow, AIRCRAFT_COLUMNS.STARLINK)
+          .getValue() || ""
+      ).trim();
+
+      if (currentAircraftStarlink === normalizedId) {
+        aircraftSheet
+          .getRange(aircraftRow, AIRCRAFT_COLUMNS.STARLINK)
+          .setValue("");
+      }
+    }
+  }
+
+  return {
+    success: true,
+    message: "Статус STARLINK змінено",
+    starlink: getStarlink(normalizedId)
+  };
 }
 
 
