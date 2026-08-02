@@ -48,16 +48,16 @@ function normalizeStarlinkStatusFilter_(status) {
     BROKEN: "Несправний",
     "НЕСПРАВНІ": "Несправний",
     "НЕСПРАВНИЙ": "Несправний",
-    LOST: "Втрачений",
-    "ВТРАЧЕНІ": "Втрачений",
-    "ВТРАЧЕНИЙ": "Втрачений"
+    USED: "Використаний",
+    "ВИКОРИСТАНІ": "Використаний",
+    "ВИКОРИСТАНИЙ": "Використаний"
   };
 
   const key = String(status || "").trim().toUpperCase();
   const normalized = aliases[key] || String(status || "").trim();
 
   if (
-    !["Вільний", "На борту", "Несправний", "Втрачений"].includes(
+    !["Вільний", "На борту", "Несправний", "Використаний"].includes(
       normalized
     )
   ) {
@@ -72,8 +72,8 @@ function starlinkStatusMatchesFilter_(starlink, filterStatus) {
   const status = String(starlink.status || "").trim();
   const linkedAircraft = String(starlink.linkedAircraft || "").trim();
 
-  if (filterStatus === "Втрачений") {
-    return status === "Втрачений" || status === "Списаний";
+  if (filterStatus === "Використаний") {
+    return status === "Використаний" || status === "Списаний";
   }
 
   if (filterStatus === "Несправний") {
@@ -295,7 +295,7 @@ function createStarlinkBatch(serialNumbers, comment, initialStatus) {
     "Вільний",
     "Несправний",
     "Ремонт",
-    "Втрачений",
+    "Використаний",
     "Списаний"
   ];
 
@@ -464,7 +464,7 @@ function setStarlinkStatus(starlinkId, newStatus) {
     "Вільний",
     "Несправний",
     "Ремонт",
-    "Втрачений",
+    "Використаний",
     "Списаний"
   ];
 
@@ -515,6 +515,38 @@ function setStarlinkStatus(starlinkId, newStatus) {
   return {
     success: true,
     message: "Статус STARLINK змінено",
+    starlink: getStarlink(normalizedId)
+  };
+}
+
+
+/**
+ * Редагування ЛИШЕ коментаря STARLINK (без зміни статусу/прив'язки) —
+ * доступне для WAREHOUSE та COMBAT.
+ */
+function updateStarlinkComment(id, comment) {
+  const normalizedId = normalizeStarlinkId_(id);
+
+  if (!normalizedId) {
+    throw new Error("Не вказано ID STARLINK");
+  }
+
+  const sheet = getRequiredSheet_(STARLINKS_SHEET);
+  const row = findStarlinkRow_(sheet, normalizedId);
+
+  if (!row) {
+    throw new Error("STARLINK " + normalizedId + " не знайдено");
+  }
+
+  const newComment = String(comment || "").trim();
+
+  sheet
+    .getRange(row, STARLINK_COLUMNS.COMMENT)
+    .setValue(newComment);
+
+  return {
+    success: true,
+    message: "Коментар збережено",
     starlink: getStarlink(normalizedId)
   };
 }
@@ -806,7 +838,13 @@ function findStarlinkRow_(sheet, starlinkId) {
 }
 
 
-function markLinkedStarlinkLost_(aircraftSheet, aircraftRow) {
+/**
+ * Позначає прив'язаний STARLINK як "Використаний" (борт, на якому він
+ * стояв, спожито/втрачено) і знімає прив'язку до борта з обох боків.
+ * Раніше ця функція називалась markLinkedStarlinkLost_ і ставила
+ * статус "Втрачений" — перейменовано разом зі статусом (2026-08-02).
+ */
+function markLinkedStarlinkUsed_(aircraftSheet, aircraftRow) {
   const starlinkId = String(
     aircraftSheet
       .getRange(aircraftRow, AIRCRAFT_COLUMNS.STARLINK)
@@ -826,15 +864,57 @@ function markLinkedStarlinkLost_(aircraftSheet, aircraftRow) {
 
   starlinksSheet
     .getRange(starlinkRow, STARLINK_COLUMNS.STATUS)
-    .setValue("Втрачений");
+    .setValue("Використаний");
 
-  // Втрачений STARLINK більше не прив'язаний до жодного борта —
-  // раніше тут помилково записувався ID борта замість очищення,
-  // через що Dashboard рахував такий STARLINK як "На бортах",
-  // а не "Втрачені".
   starlinksSheet
     .getRange(starlinkRow, STARLINK_COLUMNS.AIRCRAFT_ID)
     .setValue("");
+}
+
+
+/**
+ * ОДНОРАЗОВА міграція (2026-08-02): "Втрачений" -> "Використаний".
+ * Запускати вручну ОДИН РАЗ з редактора Apps Script (Run).
+ */
+function migrateStarlinkStatusRename_20260802_() {
+  const sheet = getRequiredSheet_(STARLINKS_SHEET);
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow < 2) {
+    return { updated: 0 };
+  }
+
+  const values = sheet
+    .getRange(2, STARLINK_COLUMNS.ID, lastRow - 1, 2)
+    .getValues();
+
+  let updated = 0;
+  const changes = [];
+
+  values.forEach(function (row, index) {
+    const id = String(row[0] || "").trim();
+    const status = String(row[1] || "").trim();
+
+    if (!id || status !== "Втрачений") {
+      return;
+    }
+
+    sheet
+      .getRange(index + 2, STARLINK_COLUMNS.STATUS)
+      .setValue("Використаний");
+
+    updated++;
+    changes.push(id + ": Втрачений -> Використаний");
+  });
+
+  Logger.log(
+    "migrateStarlinkStatusRename_20260802_: оновлено " +
+      updated +
+      " STARLINK.\n" +
+      changes.join("\n")
+  );
+
+  return { updated: updated, changes: changes };
 }
 
 

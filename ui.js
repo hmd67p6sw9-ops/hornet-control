@@ -203,6 +203,7 @@ function closeAllContentModals() {
     "createAircraftModal",
     "starlinkSearchModal",
     "createStarlinkModal",
+    "createStarlinkBatchModal",
     "starlinkInfoModal",
     "qrQueueModal",
     "qrModal",
@@ -239,11 +240,9 @@ function setStatusBadge(status) {
 
   const classes = {
     "На складі": "badge-storage",
-    "На ремонті": "badge-workshop",
+    "Пошкоджено/На ремонті": "badge-damaged",
     "На переробці на БГ": "badge-workshop",
     "На позиції": "badge-ready",
-    "БГ": "badge-ready",
-    Пошкоджено: "badge-damaged",
     Використаний: "badge-written-off",
     Списаний: "badge-written-off",
   };
@@ -253,15 +252,6 @@ function setStatusBadge(status) {
 
 function updateStatusButtons(status) {
   document.querySelectorAll(".status-button").forEach(function (button) {
-    if (button.id === "workshopStatusButton") {
-      // Ця кнопка відкриває вибір із трьох статусів (На ремонті /
-      // На переробці на БГ / БГ) — вона завжди активна, незалежно
-      // від поточного статусу, щоб можна було переходити МІЖ цими
-      // станами (наприклад, з "На переробці на БГ" одразу в "БГ").
-      button.disabled = false;
-      return;
-    }
-
     button.disabled = button.dataset.status === status;
   });
 }

@@ -84,20 +84,17 @@ function attachStarlinkSerialNumbers_(aircraftList) {
 
 function normalizeAircraftStatusFilter_(status) {
   const aliases = {
-    "БГ": "БГ",
-    ACTIVE: "БГ",
-    "АКТИВНІ": "БГ",
-    "АКТИВНИЙ": "БГ",
     WAREHOUSE: "На складі",
     "НА СКЛАДІ": "На складі",
-    REPAIR: "На ремонті",
-    "НА РЕМОНТІ": "На ремонті",
+    DAMAGED: "Пошкоджено/На ремонті",
+    "ПОШКОДЖЕНО": "Пошкоджено/На ремонті",
+    "ПОШКОДЖЕНО/НА РЕМОНТІ": "Пошкоджено/На ремонті",
+    REPAIR: "Пошкоджено/На ремонті",
+    "НА РЕМОНТІ": "Пошкоджено/На ремонті",
     REFURBISH: "На переробці на БГ",
     "НА ПЕРЕРОБЦІ НА БГ": "На переробці на БГ",
     READY: "На позиції",
     "НА ПОЗИЦІЇ": "На позиції",
-    DAMAGED: "Пошкоджено",
-    "ПОШКОДЖЕНО": "Пошкоджено",
     USED: "Використаний",
     "ВИКОРИСТАНІ": "Використаний",
     "ВИКОРИСТАНИЙ": "Використаний"
@@ -352,7 +349,7 @@ function updateAircraftStatus(id, newStatus) {
   appendHistory_(now, normalizedId, oldStatus, normalizedStatus, "");
 
   if (normalizedStatus === "Використаний") {
-    markLinkedStarlinkLost_(sheet, row);
+    markLinkedStarlinkUsed_(sheet, row);
   }
 
   return {
@@ -503,6 +500,46 @@ function updateAircraftDetails(
     success: true,
     unchanged: false,
     message: "Дані борта оновлено",
+    aircraft: getAircraft(normalizedId)
+  };
+}
+
+
+/**
+ * Вузьке редагування ЛИШЕ коментаря борта (без серійника/дати) —
+ * призначене для ролей на кшталт COMBAT, яким не варто давати повний
+ * AIRCRAFT_EDIT, але потрібно дозволити залишати нотатки.
+ */
+function updateAircraftComment(id, comment) {
+  const normalizedId = normalizeAircraftId_(id);
+
+  if (!normalizedId) {
+    throw new Error("Не вказано ID борта");
+  }
+
+  const sheet = getRequiredSheet_(AIRCRAFT_SHEET);
+  const row = findAircraftRow_(sheet, normalizedId);
+
+  if (!row) {
+    throw new Error("Борт " + normalizedId + " не знайдено");
+  }
+
+  const newComment = String(comment || "").trim();
+  const now = new Date();
+
+  sheet
+    .getRange(row, AIRCRAFT_COLUMNS.COMMENT)
+    .setValue(newComment);
+
+  sheet
+    .getRange(row, AIRCRAFT_COLUMNS.LAST_CHANGE)
+    .setValue(now);
+
+  appendHistory_(now, normalizedId, "", "", "КОМЕНТАР ЗМІНЕНО");
+
+  return {
+    success: true,
+    message: "Коментар збережено",
     aircraft: getAircraft(normalizedId)
   };
 }
@@ -664,25 +701,20 @@ function normalizeAircraftId_(value) {
 
 
 /**
- * ОДНОРАЗОВА міграція (2026-07-24): перейменування статусів.
- *   "БГ"        -> "На позиції"   (для ВСІХ бортів з цим статусом)
- *   "Майстерня" -> "На переробці на БГ" (лише для HN-0003 і HN-0009 —
- *                   решта бортів з "Майстерня" на момент міграції
- *                   не було; якщо з'являться інші, лишаться без змін
- *                   і потребуватимуть ручного рішення).
+ * ОДНОРАЗОВА міграція (2026-08-02): друга хвиля перейменування статусів.
+ *   "БГ"                    -> "На переробці на БГ" (за прямою вказівкою)
+ *   "Пошкоджено", "На ремонті" -> "Пошкоджено/На ремонті" (об'єднання)
  *
  * Запускати вручну ОДИН РАЗ з редактора Apps Script (Run), не через
  * doGet — це службова дія, не публічний API.
  */
-function migrateAircraftStatusRename_20260724_() {
+function migrateAircraftStatusMerge_20260802_() {
   const sheet = getRequiredSheet_(AIRCRAFT_SHEET);
   const lastRow = sheet.getLastRow();
 
   if (lastRow < 2) {
     return { updated: 0 };
   }
-
-  const REFURBISH_TARGET_IDS = ["HN-0003", "HN-0009"];
 
   const values = sheet
     .getRange(2, AIRCRAFT_COLUMNS.ID, lastRow - 1, 2)
@@ -702,12 +734,9 @@ function migrateAircraftStatusRename_20260724_() {
     let newStatus = null;
 
     if (status === "БГ") {
-      newStatus = "На позиції";
-    } else if (
-      status === "Майстерня" &&
-      REFURBISH_TARGET_IDS.indexOf(id) !== -1
-    ) {
       newStatus = "На переробці на БГ";
+    } else if (status === "Пошкоджено" || status === "На ремонті") {
+      newStatus = "Пошкоджено/На ремонті";
     }
 
     if (newStatus) {
@@ -721,7 +750,7 @@ function migrateAircraftStatusRename_20260724_() {
   });
 
   Logger.log(
-    "migrateAircraftStatusRename_20260724_: оновлено " +
+    "migrateAircraftStatusMerge_20260802_: оновлено " +
       updated +
       " бортів.\n" +
       changes.join("\n")

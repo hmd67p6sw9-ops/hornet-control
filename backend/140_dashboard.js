@@ -6,13 +6,10 @@ function dashboard() {
   const qrQueueSheet = getQrQueueSheet_();
 
   const aircraftCounts = {
-    Active: 0,
     Warehouse: 0,
-    Workshop: 0, // сума Repair + Refurbish, лишено для сумісності
-    Repair: 0, // "На ремонті"
+    Damaged: 0, // "Пошкоджено/На ремонті" (об'єднано 2026-08-02)
     Refurbish: 0, // "На переробці на БГ"
-    Ready: 0, // "На позиції" (раніше "БГ")
-    Damaged: 0,
+    Ready: 0, // "На позиції"
     Used: 0,
     Total: 0
   };
@@ -40,20 +37,14 @@ function dashboard() {
 
       aircraftCounts.Total++;
 
-      if (status === "БГ") {
-        aircraftCounts.Active++;
-      } else if (status === "На складі") {
+      if (status === "На складі") {
         aircraftCounts.Warehouse++;
-      } else if (status === "На ремонті") {
-        aircraftCounts.Repair++;
-        aircraftCounts.Workshop++;
+      } else if (status === "Пошкоджено/На ремонті") {
+        aircraftCounts.Damaged++;
       } else if (status === "На переробці на БГ") {
         aircraftCounts.Refurbish++;
-        aircraftCounts.Workshop++;
       } else if (status === "На позиції") {
         aircraftCounts.Ready++;
-      } else if (status === "Пошкоджено") {
-        aircraftCounts.Damaged++;
       } else if (
         status === "Використаний" ||
         status === "Списаний"
@@ -67,7 +58,7 @@ function dashboard() {
     Free: 0,
     Assigned: 0,
     Broken: 0,
-    Lost: 0,
+    Used: 0, // "Використаний" (раніше "Втрачений", перейменовано 2026-08-02)
     Total: 0
   };
 
@@ -90,8 +81,8 @@ function dashboard() {
 
       starlinkCounts.Total++;
 
-      if (status === "Втрачений" || status === "Списаний") {
-        starlinkCounts.Lost++;
+      if (status === "Використаний" || status === "Списаний") {
+        starlinkCounts.Used++;
       } else if (status === "Несправний" || status === "Ремонт") {
         starlinkCounts.Broken++;
       } else if (status === "На борту" || aircraftId) {

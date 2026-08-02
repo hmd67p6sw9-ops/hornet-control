@@ -55,18 +55,16 @@ function renderDashboard(data) {
   const starlink = data.Starlink || {};
   const qr = data.QR || {};
 
-  setDashboardCount("dashboardAircraftActive", aircraft.Active);
   setDashboardCount("dashboardAircraftWarehouse", aircraft.Warehouse);
   setDashboardCount("dashboardAircraftReady", aircraft.Ready);
-  setDashboardCount("dashboardAircraftRepair", aircraft.Repair);
-  setDashboardCount("dashboardAircraftRefurbish", aircraft.Refurbish);
   setDashboardCount("dashboardAircraftDamaged", aircraft.Damaged);
+  setDashboardCount("dashboardAircraftRefurbish", aircraft.Refurbish);
   setDashboardCount("dashboardAircraftUsed", aircraft.Used);
 
   setDashboardCount("dashboardStarlinkFree", starlink.Free);
   setDashboardCount("dashboardStarlinkAssigned", starlink.Assigned);
   setDashboardCount("dashboardStarlinkBroken", starlink.Broken);
-  setDashboardCount("dashboardStarlinkLost", starlink.Lost);
+  setDashboardCount("dashboardStarlinkUsed", starlink.Used);
 
   setDashboardCount("dashboardQrQueued", qr.Queued);
 

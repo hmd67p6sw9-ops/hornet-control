@@ -37,6 +37,10 @@ function showAircraft(aircraft) {
   setFieldValue("lastChange", aircraft.lastChange, "Немає даних");
   setFieldValue("comment", aircraft.comment, "Немає коментаря");
 
+  document.getElementById("aircraftCommentInput").value =
+    aircraft.comment || "";
+  hideGenericMessage("aircraftCommentMessage");
+
   updateStatusButtons(aircraft.status);
 
   document.getElementById("scannerCard").classList.add("hidden");
@@ -72,6 +76,57 @@ function changeStatus(status) {
       if (navigator.vibrate) navigator.vibrate(150);
 
       setTimeout(scanAnotherAircraft, 1200);
+    },
+  );
+}
+
+function saveAircraftComment() {
+  if (!selectedAircraftId) return;
+
+  const comment = document
+    .getElementById("aircraftCommentInput")
+    .value.trim();
+
+  const button = document.getElementById("saveAircraftCommentButton");
+  button.disabled = true;
+
+  showGenericMessage(
+    "aircraftCommentMessage",
+    "Збереження коментаря…",
+    "info",
+  );
+
+  apiRequest(
+    {
+      action: "updateAircraftComment",
+      id: selectedAircraftId,
+      comment: comment,
+    },
+    function (response) {
+      button.disabled = false;
+
+      if (!response.ok) {
+        showGenericMessage(
+          "aircraftCommentMessage",
+          response.error || "Не вдалося зберегти коментар",
+          "error",
+        );
+        return;
+      }
+
+      setFieldValue("comment", comment, "Немає коментаря");
+
+      if (currentAircraftData) {
+        currentAircraftData.comment = comment;
+      }
+
+      showGenericMessage(
+        "aircraftCommentMessage",
+        response.result.message || "Коментар збережено",
+        "success",
+      );
+
+      if (navigator.vibrate) navigator.vibrate(150);
     },
   );
 }

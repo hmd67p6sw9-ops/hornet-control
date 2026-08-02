@@ -58,7 +58,7 @@
     <div id="appRoot" class="hidden">
     <div class="container">
       <div class="topbar">
-        <div class="topbar-title">Hornet Control v1.6.1-alpha2</div>
+        <div class="topbar-title">Hornet Control v1.6.2-alpha1</div>
 
         <div class="topbar-actions">
           <button
@@ -112,14 +112,6 @@
 
           <button
             class="dashboard-row"
-            onclick="openAircraftStatusList('БГ', 'Борти БГ')"
-          >
-            <span>БГ</span>
-            <strong id="dashboardAircraftActive">—</strong>
-          </button>
-
-          <button
-            class="dashboard-row"
             onclick="openAircraftStatusList('На складі', 'Борти на складі')"
           >
             <span>На складі</span>
@@ -136,10 +128,10 @@
 
           <button
             class="dashboard-row"
-            onclick="openAircraftStatusList('На ремонті', 'Борти на ремонті')"
+            onclick="openAircraftStatusList('Пошкоджено/На ремонті', 'Пошкоджено/На ремонті')"
           >
-            <span>На ремонті</span>
-            <strong id="dashboardAircraftRepair">—</strong>
+            <span>Пошкоджено/На ремонті</span>
+            <strong id="dashboardAircraftDamaged">—</strong>
           </button>
 
           <button
@@ -148,14 +140,6 @@
           >
             <span>На переробці на БГ</span>
             <strong id="dashboardAircraftRefurbish">—</strong>
-          </button>
-
-          <button
-            class="dashboard-row"
-            onclick="openAircraftStatusList('Пошкоджено', 'Пошкоджені борти')"
-          >
-            <span>Пошкоджено</span>
-            <strong id="dashboardAircraftDamaged">—</strong>
           </button>
 
           <button
@@ -196,10 +180,10 @@
 
           <button
             class="dashboard-row"
-            onclick="openStarlinkStatusList('Втрачений', 'Втрачені Starlink')"
+            onclick="openStarlinkStatusList('Використаний', 'Використані Starlink')"
           >
-            <span>Втрачені</span>
-            <strong id="dashboardStarlinkLost">—</strong>
+            <span>Використані</span>
+            <strong id="dashboardStarlinkUsed">—</strong>
           </button>
         </section>
 
@@ -295,6 +279,24 @@
           <div id="comment" class="value"></div>
         </div>
 
+        <label class="form-label" for="aircraftCommentInput"
+          >Редагувати коментар</label
+        >
+        <textarea
+          id="aircraftCommentInput"
+          class="form-input form-textarea"
+        ></textarea>
+
+        <div id="aircraftCommentMessage" class="message hidden"></div>
+
+        <button
+          id="saveAircraftCommentButton"
+          class="secondary"
+          onclick="saveAircraftComment()"
+        >
+          Зберегти коментар
+        </button>
+
         <div class="status-section">
           <div class="section-title">Змінити статус</div>
 
@@ -306,11 +308,18 @@
             На складі
           </button>
           <button
-            id="workshopStatusButton"
-            class="status-button workshop"
-            onclick="openWorkshopChoiceModal()"
+            class="status-button damaged"
+            data-status="Пошкоджено/На ремонті"
+            onclick="changeStatus('Пошкоджено/На ремонті')"
           >
-            Майстерня
+            Пошкоджено/На ремонті
+          </button>
+          <button
+            class="status-button workshop"
+            data-status="На переробці на БГ"
+            onclick="changeStatus('На переробці на БГ')"
+          >
+            На переробці на БГ
           </button>
           <button
             class="status-button ready"
@@ -318,13 +327,6 @@
             onclick="changeStatus('На позиції')"
           >
             На позиції
-          </button>
-          <button
-            class="status-button damaged"
-            data-status="Пошкоджено"
-            onclick="changeStatus('Пошкоджено')"
-          >
-            Пошкоджено
           </button>
           <button
             class="status-button written-off"
@@ -379,11 +381,9 @@
           <label class="form-label" for="batchStatus">Статус</label>
           <select id="batchStatus" class="form-input">
             <option value="На складі">На складі</option>
-            <option value="БГ">БГ</option>
             <option value="На позиції">На позиції</option>
-            <option value="На ремонті">На ремонті</option>
+            <option value="Пошкоджено/На ремонті">Пошкоджено/На ремонті</option>
             <option value="На переробці на БГ">На переробці на БГ</option>
-            <option value="Пошкоджено">Пошкоджено</option>
           </select>
 
           <label class="form-label" for="batchDate">Дата отримання</label>
@@ -825,11 +825,9 @@
         >
         <select id="newAircraftStatus" class="form-input">
           <option value="На складі">На складі</option>
-          <option value="На ремонті">На ремонті</option>
+          <option value="Пошкоджено/На ремонті">Пошкоджено/На ремонті</option>
           <option value="На переробці на БГ">На переробці на БГ</option>
           <option value="На позиції">На позиції</option>
-          <option value="БГ">БГ</option>
-          <option value="Пошкоджено">Пошкоджено</option>
           <option value="Використаний">Використаний</option>
         </select>
 
@@ -973,7 +971,7 @@
           <option value="Вільний">Вільний</option>
           <option value="Несправний">Несправний</option>
           <option value="Ремонт">Ремонт</option>
-          <option value="Втрачений">Втрачений</option>
+          <option value="Використаний">Використаний</option>
           <option value="Списаний">Списаний</option>
         </select>
 
@@ -1021,6 +1019,24 @@
           <div id="starlinkInfoComment" class="value"></div>
         </div>
 
+        <label class="form-label" for="starlinkInfoCommentInput"
+          >Редагувати коментар</label
+        >
+        <textarea
+          id="starlinkInfoCommentInput"
+          class="form-input form-textarea"
+        ></textarea>
+
+        <div id="starlinkInfoCommentMessage" class="message hidden"></div>
+
+        <button
+          id="saveStarlinkCommentButton"
+          class="secondary"
+          onclick="saveStarlinkComment()"
+        >
+          Зберегти коментар
+        </button>
+
         <label class="form-label" for="starlinkInfoNewStatus"
           >Змінити статус на</label
         >
@@ -1028,7 +1044,7 @@
           <option value="Вільний">Вільний</option>
           <option value="Несправний">Несправний</option>
           <option value="Ремонт">Ремонт</option>
-          <option value="Втрачений">Втрачений</option>
+          <option value="Використаний">Використаний</option>
           <option value="Списаний">Списаний</option>
         </select>
 
@@ -1153,36 +1169,6 @@
 
         <button class="secondary" onclick="closeQrModal()">
           Закрити
-        </button>
-      </div>
-    </div>
-
-    <div id="workshopChoiceModal" class="modal hidden">
-      <div class="modal-content">
-        <h3 class="modal-title">Майстерня</h3>
-
-        <p class="scanner-help">Обери, що саме відбувається з бортом</p>
-
-        <button
-          class="primary"
-          onclick="chooseWorkshopStatus('На ремонті')"
-        >
-          На ремонті
-        </button>
-        <button
-          class="secondary"
-          onclick="chooseWorkshopStatus('На переробці на БГ')"
-        >
-          На переробці на БГ
-        </button>
-        <button
-          class="secondary"
-          onclick="chooseWorkshopStatus('БГ')"
-        >
-          БГ
-        </button>
-        <button class="secondary" onclick="closeWorkshopChoiceModal()">
-          Скасувати
         </button>
       </div>
     </div>

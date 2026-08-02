@@ -29,7 +29,7 @@ function onEdit(e) {
   appendHistory_(now, id, oldStatus, newStatus, "");
 
   if (newStatus === "Використаний") {
-    markLinkedStarlinkLost_(sheet, e.range.getRow());
+    markLinkedStarlinkUsed_(sheet, e.range.getRow());
   }
 }
 
@@ -89,6 +89,7 @@ function doGet(e) {
       createAircraft: PERMISSIONS.AIRCRAFT_CREATE,
       update: PERMISSIONS.AIRCRAFT_STATUS_CHANGE,
       updateDetails: PERMISSIONS.AIRCRAFT_EDIT,
+      updateAircraftComment: PERMISSIONS.AIRCRAFT_COMMENT_EDIT,
 
       listStarlinksByStatus: PERMISSIONS.STARLINK_VIEW,
       starlinks: PERMISSIONS.STARLINK_VIEW,
@@ -99,6 +100,7 @@ function doGet(e) {
       createStarlinkBatch: PERMISSIONS.STARLINK_CREATE,
       assignStarlink: PERMISSIONS.STARLINK_ASSIGN,
       setStarlinkStatus: PERMISSIONS.STARLINK_ASSIGN,
+      updateStarlinkComment: PERMISSIONS.STARLINK_COMMENT_EDIT,
 
       createBatch: PERMISSIONS.BATCH_CREATE,
 
@@ -362,6 +364,16 @@ function doGet(e) {
       });
     }
 
+    if (action === "updateAircraftComment") {
+      return jsonp_(callback, {
+        ok: true,
+        result: updateAircraftComment(
+          parameters.id,
+          parameters.comment
+        )
+      });
+    }
+
     if (action === "starlinks") {
       return jsonp_(callback, {
         ok: true,
@@ -427,6 +439,16 @@ function doGet(e) {
         result: setStarlinkStatus(
           parameters.id,
           parameters.status
+        )
+      });
+    }
+
+    if (action === "updateStarlinkComment") {
+      return jsonp_(callback, {
+        ok: true,
+        result: updateStarlinkComment(
+          parameters.id,
+          parameters.comment
         )
       });
     }

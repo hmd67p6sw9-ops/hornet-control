@@ -89,8 +89,59 @@ function showStarlinkInfo(item) {
   setFieldValue("starlinkInfoSerial", item.serialNumber, "Не вказано");
   setFieldValue("starlinkInfoComment", item.comment, "Немає коментаря");
 
+  document.getElementById("starlinkInfoCommentInput").value =
+    item.comment || "";
+  hideGenericMessage("starlinkInfoCommentMessage");
   hideGenericMessage("starlinkInfoStatusMessage");
+
   document.getElementById("starlinkInfoModal").classList.remove("hidden");
+}
+
+function saveStarlinkComment() {
+  if (!currentStarlinkInfoId) return;
+
+  const comment = document
+    .getElementById("starlinkInfoCommentInput")
+    .value.trim();
+
+  const button = document.getElementById("saveStarlinkCommentButton");
+  button.disabled = true;
+
+  showGenericMessage(
+    "starlinkInfoCommentMessage",
+    "Збереження коментаря…",
+    "info",
+  );
+
+  apiRequest(
+    {
+      action: "updateStarlinkComment",
+      id: currentStarlinkInfoId,
+      comment: comment,
+    },
+    function (response) {
+      button.disabled = false;
+
+      if (!response.ok) {
+        showGenericMessage(
+          "starlinkInfoCommentMessage",
+          response.error || "Не вдалося зберегти коментар",
+          "error",
+        );
+        return;
+      }
+
+      setFieldValue("starlinkInfoComment", comment, "Немає коментаря");
+
+      showGenericMessage(
+        "starlinkInfoCommentMessage",
+        response.result.message || "Коментар збережено",
+        "success",
+      );
+
+      if (navigator.vibrate) navigator.vibrate(150);
+    },
+  );
 }
 
 function changeStarlinkStatusFromInfo() {
