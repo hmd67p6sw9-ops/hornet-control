@@ -120,6 +120,7 @@ function dashboard() {
   return {
     Aircraft: aircraftCounts,
     Starlink: starlinkCounts,
+    Positions: getPositionCounts_(),
     QR: {
       Queued: queued,
       History: history

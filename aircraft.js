@@ -37,6 +37,15 @@ function showAircraft(aircraft) {
   setFieldValue("lastChange", aircraft.lastChange, "Немає даних");
   setFieldValue("comment", aircraft.comment, "Немає коментаря");
 
+  const positionField = document.getElementById("aircraftPositionField");
+
+  if (aircraft.position) {
+    positionField.classList.remove("hidden");
+    setFieldValue("aircraftPositionValue", aircraft.position, "");
+  } else {
+    positionField.classList.add("hidden");
+  }
+
   document.getElementById("aircraftCommentInput").value =
     aircraft.comment || "";
   hideGenericMessage("aircraftCommentMessage");

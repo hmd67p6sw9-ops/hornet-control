@@ -16,7 +16,7 @@ function listAircraftByStatus(status) {
   }
 
   const values = sheet
-    .getRange(2, 1, lastRow - 1, AIRCRAFT_COLUMNS.BATCH_ID)
+    .getRange(2, 1, lastRow - 1, AIRCRAFT_COLUMNS.POSITION)
     .getValues();
 
   const matched = values
@@ -157,7 +157,7 @@ function searchAircraft(query) {
   if (lastRow < 2) return [];
 
   const values = sheet
-    .getRange(2, 1, lastRow - 1, AIRCRAFT_COLUMNS.BATCH_ID)
+    .getRange(2, 1, lastRow - 1, AIRCRAFT_COLUMNS.POSITION)
     .getValues();
   const result = [];
 
@@ -174,7 +174,8 @@ function searchAircraft(query) {
         serialNumber: String(row[3] || ""),
         receivedDate: formatDate_(row[4], "dd.MM.yyyy"),
         lastChange: formatDate_(row[5], "dd.MM.yyyy HH:mm:ss"),
-        comment: String(row[6] || "")
+        comment: String(row[6] || ""),
+        position: String(row[8] || "")
       });
     }
   });
@@ -211,6 +212,12 @@ function createAircraft(
 
   if (!ALLOWED_STATUSES.includes(normalizedStatus)) {
     throw new Error("Некоректний статус");
+  }
+
+  if (normalizedStatus === "На позиції") {
+    throw new Error(
+      "Створи борт з іншим статусом, потім признач на позицію окремо"
+    );
   }
 
   const parsedReceivedDate =
@@ -302,6 +309,13 @@ function updateAircraftStatus(id, newStatus) {
     throw new Error("Некоректний статус");
   }
 
+  if (normalizedStatus === "На позиції") {
+    throw new Error(
+      "Для статусу «На позиції» вкажи саму позицію " +
+      "(використовуй призначення на позицію)"
+    );
+  }
+
   const sheet = getRequiredSheet_(AIRCRAFT_SHEET);
   const row = findAircraftRow_(sheet, normalizedId);
 
@@ -346,6 +360,10 @@ function updateAircraftStatus(id, newStatus) {
   sheet.getRange(row, AIRCRAFT_COLUMNS.STATUS).setValue(normalizedStatus);
   sheet.getRange(row, AIRCRAFT_COLUMNS.LAST_CHANGE).setValue(now);
 
+  // Позиція має сенс лише для статусу "На позиції" — при переході в
+  // будь-який інший статус прив'язку до конкретної позиції очищуємо.
+  sheet.getRange(row, AIRCRAFT_COLUMNS.POSITION).setValue("");
+
   appendHistory_(now, normalizedId, oldStatus, normalizedStatus, "");
 
   if (normalizedStatus === "Використаний") {
@@ -382,7 +400,7 @@ function updateAircraftDetails(
   }
 
   const oldValues = sheet
-    .getRange(row, 1, 1, AIRCRAFT_COLUMNS.BATCH_ID)
+    .getRange(row, 1, 1, AIRCRAFT_COLUMNS.POSITION)
     .getValues()[0];
 
   const oldSerialNumber = String(oldValues[3] || "").trim();
@@ -552,7 +570,7 @@ function updateAircraftComment(id, comment) {
 
 function aircraftFromRow_(sheet, row) {
   const values = sheet
-    .getRange(row, 1, 1, AIRCRAFT_COLUMNS.BATCH_ID)
+    .getRange(row, 1, 1, AIRCRAFT_COLUMNS.POSITION)
     .getValues()[0];
 
   return aircraftFromValues_(values, row);
@@ -568,7 +586,8 @@ function aircraftFromValues_(values, row) {
     serialNumber: String(values[3] || ""),
     receivedDate: formatDate_(values[4], "dd.MM.yyyy"),
     lastChange: formatDate_(values[5], "dd.MM.yyyy HH:mm:ss"),
-    comment: String(values[6] || "")
+    comment: String(values[6] || ""),
+    position: String(values[8] || "")
   };
 }
 

@@ -18,6 +18,12 @@ function createBatch(
     throw new Error("Некоректний статус");
   }
 
+  if (normalizedStatus === "На позиції") {
+    throw new Error(
+      "Створи партію з іншим статусом, потім признач кожен борт на позицію окремо"
+    );
+  }
+
   const normalizedSerialNumbers = parseBatchSerialNumbers_(
     serialNumbers,
     parsedQuantity
@@ -71,7 +77,8 @@ function createBatch(
         parsedCreatedDate,
         now,
         normalizedComment,
-        batchId
+        batchId,
+        ""
       ]);
 
       historyRows.push([
@@ -120,7 +127,7 @@ function createBatch(
           startRows.aircraft,
           1,
           aircraftRows.length,
-          AIRCRAFT_COLUMNS.BATCH_ID
+          AIRCRAFT_COLUMNS.POSITION
         )
         .setValues(aircraftRows);
       written.aircraft = true;
@@ -215,7 +222,7 @@ function rollbackBatchWrite_(
         startRows.aircraft,
         1,
         quantity,
-        AIRCRAFT_COLUMNS.BATCH_ID
+        AIRCRAFT_COLUMNS.POSITION
       )
       .clearContent();
   }

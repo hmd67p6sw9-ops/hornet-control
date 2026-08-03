@@ -104,6 +104,11 @@ function doGet(e) {
 
       createBatch: PERMISSIONS.BATCH_CREATE,
 
+      listPositions: PERMISSIONS.POSITIONS_VIEW,
+      createPosition: PERMISSIONS.POSITIONS_MANAGE,
+      assignAircraftPosition: PERMISSIONS.AIRCRAFT_STATUS_CHANGE,
+      listAircraftByPosition: PERMISSIONS.AIRCRAFT_VIEW,
+
       getQrQueue: PERMISSIONS.QR_VIEW,
       getPrintSettings: PERMISSIONS.QR_VIEW,
       getPrintTemplates: PERMISSIONS.QR_VIEW,
@@ -292,6 +297,37 @@ function doGet(e) {
           parameters.comment,
           parameters.serialNumbers
         )
+      });
+    }
+
+    if (action === "listPositions") {
+      return jsonp_(callback, {
+        ok: true,
+        positions: listPositions()
+      });
+    }
+
+    if (action === "createPosition") {
+      return jsonp_(callback, {
+        ok: true,
+        result: createPosition(parameters.name)
+      });
+    }
+
+    if (action === "assignAircraftPosition") {
+      return jsonp_(callback, {
+        ok: true,
+        result: assignAircraftPosition(
+          parameters.id,
+          parameters.position
+        )
+      });
+    }
+
+    if (action === "listAircraftByPosition") {
+      return jsonp_(callback, {
+        ok: true,
+        aircraft: listAircraftByPosition(parameters.position)
       });
     }
 

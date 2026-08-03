@@ -54,6 +54,7 @@ function renderDashboard(data) {
   const aircraft = data.Aircraft || {};
   const starlink = data.Starlink || {};
   const qr = data.QR || {};
+  const positions = data.Positions || [];
 
   setDashboardCount("dashboardAircraftWarehouse", aircraft.Warehouse);
   setDashboardCount("dashboardAircraftReady", aircraft.Ready);
@@ -67,6 +68,8 @@ function renderDashboard(data) {
   setDashboardCount("dashboardStarlinkUsed", starlink.Used);
 
   setDashboardCount("dashboardQrQueued", qr.Queued);
+
+  renderDashboardPositions(positions);
 
   document.getElementById("dashboardUpdated").textContent =
     "Оновлено " + formatDashboardTime(new Date());
@@ -97,6 +100,59 @@ function formatDashboardTime(date) {
     hour: "2-digit",
     minute: "2-digit"
   });
+}
+
+function renderDashboardPositions(positions) {
+  const section = document.getElementById("dashboardPositionsSection");
+  const container = document.getElementById("dashboardPositionsList");
+
+  if (!positions.length) {
+    section.classList.add("hidden");
+    return;
+  }
+
+  section.classList.remove("hidden");
+  container.innerHTML = "";
+
+  positions.forEach(function (position) {
+    const button = document.createElement("button");
+    button.className = "dashboard-row";
+
+    button.addEventListener("click", function () {
+      openPositionAircraftList(position.name);
+    });
+
+    const label = document.createElement("span");
+    label.textContent = position.name;
+
+    const count = document.createElement("strong");
+    count.textContent = Number(position.count || 0);
+
+    button.appendChild(label);
+    button.appendChild(count);
+    container.appendChild(button);
+  });
+}
+
+function openPositionAircraftList(positionName) {
+  openDashboardListModal("Борти на позиції «" + positionName + "»");
+
+  apiRequest(
+    {
+      action: "listAircraftByPosition",
+      position: positionName
+    },
+    function (response) {
+      if (!response.ok) {
+        showDashboardListError(
+          response.error || "Не вдалося завантажити список бортів"
+        );
+        return;
+      }
+
+      renderDashboardAircraftList(response.aircraft || []);
+    }
+  );
 }
 
 function openAircraftStatusList(status, title) {

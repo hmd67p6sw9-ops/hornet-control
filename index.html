@@ -187,6 +187,12 @@
           </button>
         </section>
 
+        <section id="dashboardPositionsSection" class="dashboard-section hidden">
+          <h3 class="dashboard-section-title">Позиції</h3>
+
+          <div id="dashboardPositionsList"></div>
+        </section>
+
         <section class="dashboard-section">
           <h3 class="dashboard-section-title">QR</h3>
 
@@ -245,6 +251,11 @@
         <div class="field">
           <div class="label">Статус</div>
           <div id="currentStatus"></div>
+        </div>
+
+        <div id="aircraftPositionField" class="field hidden">
+          <div class="label">На позиції</div>
+          <div id="aircraftPositionValue" class="value"></div>
         </div>
 
         <div class="field">
@@ -322,9 +333,9 @@
             На переробці на БГ
           </button>
           <button
+            id="positionStatusButton"
             class="status-button ready"
-            data-status="На позиції"
-            onclick="changeStatus('На позиції')"
+            onclick="openPositionChoiceModal()"
           >
             На позиції
           </button>
@@ -381,7 +392,6 @@
           <label class="form-label" for="batchStatus">Статус</label>
           <select id="batchStatus" class="form-input">
             <option value="На складі">На складі</option>
-            <option value="На позиції">На позиції</option>
             <option value="Пошкоджено/На ремонті">Пошкоджено/На ремонті</option>
             <option value="На переробці на БГ">На переробці на БГ</option>
           </select>
@@ -518,6 +528,10 @@
 
           <button class="secondary" onclick="openUsersModal()">
             Користувачі
+          </button>
+
+          <button class="secondary" onclick="openPositionsAdminModal()">
+            Позиції
           </button>
 
           <button class="danger" onclick="performLogout()">
@@ -707,6 +721,41 @@
       </div>
     </div>
 
+    <div id="positionsAdminModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Позиції</h3>
+
+        <label class="form-label" for="newPositionName"
+          >Назва нової позиції</label
+        >
+        <input
+          id="newPositionName"
+          class="form-input"
+          type="text"
+          autocomplete="off"
+          placeholder="Наприклад, Волошка"
+        />
+
+        <div id="positionsAdminMessage" class="message hidden"></div>
+
+        <button
+          id="createPositionButton"
+          class="primary"
+          onclick="createPositionFromApp()"
+        >
+          Додати позицію
+        </button>
+
+        <div id="positionsAdminList">
+          <div class="no-items">Завантаження…</div>
+        </div>
+
+        <button class="secondary" onclick="closePositionsAdminModal()">
+          Закрити
+        </button>
+      </div>
+    </div>
+
     <div id="userFormModal" class="modal hidden">
       <div class="modal-content">
         <h3 id="userFormTitle" class="modal-title">Новий користувач</h3>
@@ -827,7 +876,6 @@
           <option value="На складі">На складі</option>
           <option value="Пошкоджено/На ремонті">Пошкоджено/На ремонті</option>
           <option value="На переробці на БГ">На переробці на БГ</option>
-          <option value="На позиції">На позиції</option>
           <option value="Використаний">Використаний</option>
         </select>
 
@@ -1173,6 +1221,24 @@
       </div>
     </div>
 
+    <div id="positionChoiceModal" class="modal hidden">
+      <div class="modal-content">
+        <h3 class="modal-title">Направити на позицію</h3>
+
+        <p class="scanner-help">Обери позицію для цього борта</p>
+
+        <div id="positionChoiceOptions">
+          <div class="no-items">Завантаження…</div>
+        </div>
+
+        <div id="positionChoiceMessage" class="message hidden"></div>
+
+        <button class="secondary" onclick="closePositionChoiceModal()">
+          Скасувати
+        </button>
+      </div>
+    </div>
+
     <div id="starlinkModal" class="modal hidden">
       <div class="modal-content">
         <h3 class="modal-title">Прив’язка STARLINK</h3>
@@ -1256,6 +1322,7 @@
     <script src="scanner.js"></script>
     <script src="aircraft.js"></script>
     <script src="starlink.js"></script>
+    <script src="positions.js"></script>
     <script src="history.js"></script>
     <script src="qr.js"></script>
     <script src="print.js"></script>

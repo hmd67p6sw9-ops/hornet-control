@@ -215,6 +215,8 @@ function closeAllContentModals() {
     "diagnosticsModal",
     "backupsModal",
     "smartSearchModal",
+    "positionChoiceModal",
+    "positionsAdminModal",
   ].forEach(function (id) {
     document.getElementById(id).classList.add("hidden");
   });
@@ -252,6 +254,14 @@ function setStatusBadge(status) {
 
 function updateStatusButtons(status) {
   document.querySelectorAll(".status-button").forEach(function (button) {
+    if (button.id === "positionStatusButton") {
+      // Кнопка "На позиції" завжди активна, незалежно від поточного
+      // статусу — навіть коли борт уже на позиції, треба мати змогу
+      // перенести його на іншу без проміжного статусу.
+      button.disabled = false;
+      return;
+    }
+
     button.disabled = button.dataset.status === status;
   });
 }

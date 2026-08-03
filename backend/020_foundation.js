@@ -7,8 +7,10 @@ function ensureBackendFoundation_() {
   const aircraftSheet = getRequiredSheet_(AIRCRAFT_SHEET);
 
   ensureAircraftBatchColumn_(aircraftSheet);
+  ensureAircraftPositionColumn_(aircraftSheet);
   ensureAircraftStatusValidation_(aircraftSheet);
   getBatchesSheet_(spreadsheet);
+  getPositionsSheet_(spreadsheet);
   getSystemLogSheet_(spreadsheet);
   getBackupsSheet_(spreadsheet);
   ensureSecurityFoundation_(spreadsheet);
@@ -107,11 +109,49 @@ function ensureAircraftBatchColumn_(sheet) {
 }
 
 
+function ensureAircraftPositionColumn_(sheet) {
+  const lastColumn = Math.max(sheet.getLastColumn(), AIRCRAFT_COLUMNS.BATCH_ID);
+  const headers = sheet
+    .getRange(1, 1, 1, lastColumn)
+    .getValues()[0]
+    .map(function (value) {
+      return String(value || "").trim();
+    });
+
+  const positionColumnIndex = headers.findIndex(function (header) {
+    return header.toUpperCase() === "POSITION";
+  });
+
+  if (positionColumnIndex >= 0) {
+    if (positionColumnIndex + 1 !== AIRCRAFT_COLUMNS.POSITION) {
+      throw new Error(
+        "Колонка Position у Aircraft має бути дев'ятою колонкою"
+      );
+    }
+
+    return;
+  }
+
+  sheet
+    .getRange(1, AIRCRAFT_COLUMNS.POSITION)
+    .setValue("Position");
+}
+
+
 function getBatchesSheet_(spreadsheet) {
   return getOrCreateSheetSafe_(
     spreadsheet,
     BATCHES_SHEET,
     BATCH_HEADERS
+  ).sheet;
+}
+
+
+function getPositionsSheet_(spreadsheet) {
+  return getOrCreateSheetSafe_(
+    spreadsheet,
+    POSITIONS_SHEET,
+    POSITIONS_HEADERS
   ).sheet;
 }
 
