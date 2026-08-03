@@ -1101,11 +1101,26 @@ button:disabled {
  * "прилипає" до низу видимої області модалки, тільки коли контент
  * реально довший за екран (overflow-y: auto на .modal-content) — на
  * коротких модалках жодного видимого ефекту, все як і було.
+ *
+ * НЕ задаємо тут background — кожна кнопка вже має власний непрозорий
+ * фон зі свого класу (primary/secondary/danger/...). Раніше тут був
+ * background: #fff, який перебивав синій фон кнопки "Увійти" (клас
+ * .primary), роблячи білий текст невидимим на білому фоні.
+ *
+ * bottom: 0 (не від'ємне значення!) — від'ємний offset у sticky
+ * спричиняв на iOS Safari зникнення кнопки "Увійти" на екрані логіну
+ * (елемент візуально виштовхувало за межі видимої області). Екран
+ * логіну додатково виключений з цього правила explicit — вхід має
+ * лишатись максимально надійним незалежно від інших змін.
  */
 .modal-content button:last-of-type {
   position: sticky;
-  bottom: -18px;
+  bottom: 0;
   z-index: 2;
-  background: #fff;
   box-shadow: 0 -10px 14px -6px rgba(0, 0, 0, 0.12);
+}
+
+#loginScreen .modal-content button:last-of-type {
+  position: static;
+  box-shadow: none;
 }
