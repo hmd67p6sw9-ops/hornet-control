@@ -81,6 +81,14 @@ function starlinkStatusMatchesFilter_(starlink, filterStatus) {
   }
 
   if (filterStatus === "На борту") {
+    // Заблокований статус (Списаний/Використаний/Несправний/Ремонт)
+    // означає, що STARLINK більше не "на борту", навіть якщо в даних
+    // залишилась застаріла прив'язка до борта (наприклад, після
+    // ручного редагування таблиці напряму в Google Sheets).
+    if (BLOCKED_STARLINK_STATUSES.includes(status)) {
+      return false;
+    }
+
     return status === "На борту" || Boolean(linkedAircraft);
   }
 
@@ -909,6 +917,64 @@ function migrateStarlinkStatusRename_20260802_() {
 
   Logger.log(
     "migrateStarlinkStatusRename_20260802_: оновлено " +
+      updated +
+      " STARLINK.\n" +
+      changes.join("\n")
+  );
+
+  return { updated: updated, changes: changes };
+}
+
+
+/**
+ * ОДНОРАЗОВА міграція (2026-08-05): очищення застарілих прив'язок
+ * "Прив'язаний до" у STARLINK, які мають заблокований статус
+ * (Списаний/Використаний/Несправний/Ремонт), але досі числяться
+ * прив'язаними до якогось борта — найімовірніше, через ручне
+ * редагування статусу напряму в Google Sheets (onEdit стежить лише
+ * за аркушем Aircraft, не за Starlinks, тож така правка не запускає
+ * автоматичну очистку прив'язки).
+ */
+function cleanupBlockedStarlinkAircraftLinks_20260805_() {
+  const sheet = getRequiredSheet_(STARLINKS_SHEET);
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow < 2) {
+    return { updated: 0 };
+  }
+
+  const values = sheet
+    .getRange(2, STARLINK_COLUMNS.ID, lastRow - 1, 3)
+    .getValues();
+
+  let updated = 0;
+  const changes = [];
+
+  values.forEach(function (row, index) {
+    const id = String(row[0] || "").trim();
+    const status = String(row[1] || "").trim();
+    const linkedAircraft = String(row[2] || "").trim();
+
+    if (!id || !linkedAircraft) {
+      return;
+    }
+
+    if (!BLOCKED_STARLINK_STATUSES.includes(status)) {
+      return;
+    }
+
+    sheet
+      .getRange(index + 2, STARLINK_COLUMNS.AIRCRAFT_ID)
+      .setValue("");
+
+    updated++;
+    changes.push(
+      id + " (" + status + "): прив'язку до " + linkedAircraft + " знято"
+    );
+  });
+
+  Logger.log(
+    "cleanupBlockedStarlinkAircraftLinks_20260805_: оновлено " +
       updated +
       " STARLINK.\n" +
       changes.join("\n")
